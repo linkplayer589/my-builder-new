@@ -43,14 +43,14 @@ const nextConfig = {
   // Payload CMS uses pino internally, which uses thread-stream, which uses worker_threads
   // NOTE: This is a known Turbopack limitation - it may still try to trace worker_threads
   // during NFT (Node File Trace) phase, causing build failures
-  // serverExternalPackages: [
-  //   "pino",
-  //   "thread-stream",
-  //   "pino-pretty",
-  //   "payload",
-  //   "@payloadcms/db-postgres",
-  //   "@payloadcms/richtext-slate",
-  // ],
+  serverExternalPackages: [
+    "pino",
+    "thread-stream",
+    "pino-pretty",
+    "payload",
+    "@payloadcms/db-postgres",
+    "@payloadcms/richtext-slate",
+  ],
 
   // Turbopack configuration
   // turbopack: {
