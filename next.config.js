@@ -15,18 +15,18 @@ const nextConfig = {
   // TypeScript config - linting and typechecking done separately in CI
   typescript: { ignoreBuildErrors: true },
 
-  cacheLife: {
-    default: {
-      stale: 300, // 5 minutes
-      revalidate: 900, // 15 minutes
-      expire: 3600, // 1 hour
-    },
-    sessions: {
-      stale: 60, // 1 minute
-      revalidate: 300, // 5 minutes
-      expire: 900, // 15 minutes
-    },
-  },
+  // cacheLife: {
+  //   default: {
+  //     stale: 300, // 5 minutes
+  //     revalidate: 900, // 15 minutes
+  //     expire: 3600, // 1 hour
+  //   },
+  //   sessions: {
+  //     stale: 60, // 1 minute
+  //     revalidate: 300, // 5 minutes
+  //     expire: 900, // 15 minutes
+  //   },
+  // },
 
   // Enable experimental cache features
   experimental: {
@@ -123,6 +123,36 @@ const nextConfig = {
   //     "thread-stream/bench": "./src/lib/empty-module.js",
   //   },
   // },
+
+  webpack: (config, { isServer }) => {
+    config.resolve.extensions = [".tsx", ".ts", ".jsx", ".js"]
+
+    // Exclude binary files and README files from processing
+    if (isServer) {
+      config.module = config.module || {}
+      config.module.rules = config.module.rules || []
+
+      // Ignore binary files and README files from node_modules
+      config.module.rules.push({
+        test: /\.(md|bin)$/,
+        type: "asset/resource",
+      })
+
+      // Ignore esbuild platform-specific binaries
+      config.resolve.alias = config.resolve.alias || {}
+      config.resolve.alias["@esbuild/linux-x64/bin/esbuild"] = false
+    }
+
+    // Ignore problematic files in node_modules
+    config.externals = config.externals || []
+    if (Array.isArray(config.externals)) {
+      config.externals.push({
+        "@esbuild/linux-x64": "commonjs @esbuild/linux-x64",
+      })
+    }
+
+    return config
+  },
 }
 
 export default nextConfig
