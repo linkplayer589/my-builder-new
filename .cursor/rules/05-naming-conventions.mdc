@@ -1,0 +1,451 @@
+---
+description: Context-search optimized naming conventions for files and directories
+alwaysApply: true
+---
+
+# Naming Conventions
+
+## The Context Search Strategy
+
+**Goal**: Type a feature/table name to find ALL related files AND folders instantly
+
+**Format**: 
+- **Folders**: `[feature-name]-[descriptor]/`
+- **Files**: `[feature-name]-[descriptor].[ext]`
+
+**CRITICAL**: Prefix folders AND files with feature name for complete searchability!
+
+---
+
+## Feature Folders
+
+### Format
+
+```
+[feature-name]-[descriptor]/
+```
+
+### Examples
+
+```
+✅ CORRECT:
+user-table-components/
+user-table-hooks/
+user-table-utils/
+user-table-types/
+user-table-constants/
+user-table-features/
+
+product-catalog-components/
+product-catalog-hooks/
+product-catalog-utils/
+
+device-registry-components/
+device-registry-hooks/
+```
+
+### ❌ Wrong Examples
+
+```
+❌ components/             (missing feature prefix)
+❌ hooks/                  (missing feature prefix)
+❌ utils/                  (missing feature prefix)
+```
+
+### Benefit
+
+Search "user-table" finds:
+- ✅ ALL folders: `user-table-components/`, `user-table-hooks/`, etc.
+- ✅ ALL files: `user-table-header.tsx`, `user-table-hooks.ts`, etc.
+
+**Complete context in one search!** 🎯
+
+---
+
+## Feature Files
+
+### Format
+
+```
+[feature-name]-[descriptor].[ext]
+```
+
+### Examples
+
+```
+✅ CORRECT:
+user-table-header.tsx
+user-table-row.tsx
+user-table-hooks.ts
+user-table-utils.ts
+user-table-types.ts
+user-table-constants.ts
+
+product-catalog-form.tsx
+product-catalog-hooks.ts
+product-catalog-schema.ts
+
+device-registry-list.tsx
+device-registry-hooks.ts
+```
+
+### ❌ Wrong Examples
+
+```
+❌ header.tsx              (missing feature prefix)
+❌ hooks.ts                (missing feature prefix)
+❌ UserTableHeader.tsx     (wrong case for file name)
+❌ user_table_header.tsx   (wrong separator)
+```
+
+### Component Naming Inside Files
+
+```typescript
+// File: user-table-header.tsx
+// Component: UserTableHeader (PascalCase)
+
+/**
+ * Header component for the user table feature
+ */
+export function UserTableHeader() {
+  // ...
+}
+
+// Export default also acceptable
+export default UserTableHeader
+```
+
+---
+
+## Database Files
+
+### Schema Files
+
+```
+Format: [table-name]-schema.ts
+
+Examples:
+✅ user-table-schema.ts
+✅ product-catalog-schema.ts
+✅ device-registry-schema.ts
+```
+
+### Query Files
+
+```
+Format: [table-name]-queries.ts
+
+Examples:
+✅ user-table-queries.ts
+✅ product-catalog-queries.ts
+✅ device-registry-queries.ts
+```
+
+### Mutation Files
+
+```
+Format: [table-name]-mutations.ts
+
+Examples:
+✅ user-table-mutations.ts
+✅ product-catalog-mutations.ts
+✅ device-registry-mutations.ts
+```
+
+### Action Files
+
+```
+Format: [action-description]-action.ts
+Location: db/actions/[table-name]/
+
+Examples:
+✅ db/actions/user-table/create-user-action.ts
+✅ db/actions/user-table/update-user-action.ts
+✅ db/actions/user-table/delete-user-action.ts
+```
+
+---
+
+## Hook Naming
+
+### File Names
+
+```
+Format: [feature-name]-hooks.ts
+
+Examples:
+✅ user-table-hooks.ts
+✅ product-catalog-hooks.ts
+✅ device-registry-hooks.ts
+```
+
+### Hook Function Names
+
+```typescript
+// File: user-table-hooks.ts
+
+/**
+ * Hook for managing user table data
+ */
+export function useUserTable() {
+  // ...
+}
+
+/**
+ * Hook for user table filters
+ */
+export function useUserTableFilters() {
+  // ...
+}
+
+/**
+ * Hook for user table pagination
+ */
+export function useUserTablePagination() {
+  // ...
+}
+```
+
+**Pattern**: `use[FeatureName][Descriptor]`
+
+---
+
+## Type Naming
+
+### File Names
+
+```
+Format: [feature-name]-types.ts
+
+Examples:
+✅ user-table-types.ts
+✅ product-catalog-types.ts
+✅ device-registry-types.ts
+```
+
+### Type Names
+
+```typescript
+// File: user-table-types.ts
+
+/**
+ * Props for UserTable component
+ */
+export type TUserTableProps = {
+  data: TUserTable[]
+  onRowClick?: (user: TUserTable) => void
+}
+
+/**
+ * User table row data structure
+ */
+export type TUserTable = {
+  id: string
+  name: string
+  email: string
+  createdAt: string
+}
+
+/**
+ * User table filter options
+ */
+export type TUserTableFilter = {
+  search?: string
+  status?: 'active' | 'inactive'
+}
+```
+
+**Pattern**: `T[FeatureName][Descriptor]`
+
+**Note**: Types start with `T` prefix (per project rules)
+
+---
+
+## Interface Naming
+
+```typescript
+/**
+ * Interface for user table repository
+ */
+export interface IUserTableRepository {
+  getAll(): Promise<TUserTable[]>
+  getById(id: string): Promise<TUserTable | null>
+  create(data: Omit<TUserTable, 'id'>): Promise<TUserTable>
+  update(id: string, data: Partial<TUserTable>): Promise<TUserTable>
+  delete(id: string): Promise<void>
+}
+```
+
+**Pattern**: `I[FeatureName][Descriptor]`
+
+**Note**: Interfaces start with `I` prefix (per project rules)
+
+---
+
+## Constant Naming
+
+### File Names
+
+```
+Format: [feature-name]-constants.ts
+
+Examples:
+✅ user-table-constants.ts
+✅ product-catalog-constants.ts
+✅ device-registry-constants.ts
+```
+
+### Constant Names
+
+```typescript
+// File: user-table-constants.ts
+
+/**
+ * Default page size for user table pagination
+ */
+export const USER_TABLE_DEFAULT_PAGE_SIZE = 20
+
+/**
+ * Sort options for user table
+ */
+export const USER_TABLE_SORT_OPTIONS = [
+  { value: 'name', label: 'Name' },
+  { value: 'email', label: 'Email' },
+  { value: 'createdAt', label: 'Created Date' },
+] as const
+
+/**
+ * Filter status options
+ */
+export const USER_TABLE_STATUS_OPTIONS = ['active', 'inactive'] as const
+```
+
+**Pattern**: `[FEATURE_NAME]_[DESCRIPTOR]` (SCREAMING_SNAKE_CASE)
+
+---
+
+## Utility Naming
+
+### File Names
+
+```
+Format: [feature-name]-utils.ts
+
+Examples:
+✅ user-table-utils.ts
+✅ product-catalog-utils.ts
+✅ device-registry-utils.ts
+```
+
+### Utility Function Names
+
+```typescript
+// File: user-table-utils.ts
+
+/**
+ * Sort users by specified field
+ */
+export function sortUserTableData(
+  data: TUserTable[],
+  field: keyof TUserTable
+): TUserTable[] {
+  // ...
+}
+
+/**
+ * Filter users by search query
+ */
+export function filterUserTableData(
+  data: TUserTable[],
+  query: string
+): TUserTable[] {
+  // ...
+}
+
+/**
+ * Format user table row for display
+ */
+export function formatUserTableRow(user: TUserTable): string {
+  // ...
+}
+```
+
+**Pattern**: `[actionVerb][FeatureName][Descriptor]`
+
+---
+
+## Nested Feature Naming
+
+When features are nested, inherit parent prefix:
+
+```
+features/
+└── user-table/
+    └── user-table-features/
+        └── user-details/
+            ├── user-details-components/
+            │   ├── user-details-form.tsx       (inherits parent)
+            │   ├── user-details-avatar.tsx     (inherits parent)
+            │   └── user-details-actions.tsx    (inherits parent)
+            └── user-details-hooks/
+                └── user-details-hooks.ts       (inherits parent)
+```
+
+**Pattern**: `[parent-feature]-[nested-feature]-[descriptor].[ext]`
+
+This makes it clear that `user-details` belongs to `user-table`.
+
+---
+
+## Generic Component Naming
+
+Generic components in `/components` don't need feature prefix:
+
+```
+components/
+└── ui/
+    ├── button.tsx              ✅ (generic, no prefix needed)
+    ├── input.tsx               ✅ (generic, no prefix needed)
+    ├── dialog.tsx              ✅ (generic, no prefix needed)
+    └── data-table.tsx          ✅ (generic, no prefix needed)
+```
+
+**Why?** They're not feature-specific, so no prefix needed.
+
+---
+
+## Case Conventions Summary
+
+| Item | Convention | Example |
+|------|-----------|---------|
+| Feature folders | kebab-case with prefix | `user-table-components/` |
+| File names | kebab-case with prefix | `user-table-header.tsx` |
+| Components | PascalCase | `UserTableHeader` |
+| Functions | camelCase | `getUserTableData()` |
+| Hooks | camelCase with `use` prefix | `useUserTable()` |
+| Types | PascalCase with `T` prefix | `TUserTableProps` |
+| Interfaces | PascalCase with `I` prefix | `IUserTableRepository` |
+| Constants | SCREAMING_SNAKE_CASE | `USER_TABLE_PAGE_SIZE` |
+| Main feature folder | kebab-case (no prefix) | `user-table/` |
+
+---
+
+## The Search Test
+
+**Test your naming by searching**:
+
+1. Open file search (Cmd/Ctrl + P)
+2. Type the feature name: `user-table`
+3. Result: ALL user-table files should appear
+
+If you can't find all related files by searching the feature name, your naming is wrong!
+
+---
+
+## Benefits
+
+1. **Instant Discovery** - Find all related files by typing feature name
+2. **Clear Ownership** - File names show which feature they belong to
+3. **No Confusion** - No generic names like `header.tsx` or `utils.ts`
+4. **Better Organization** - Related files naturally group in search results
+5. **Easier Refactoring** - Moving features between projects is trivial

@@ -1,0 +1,99 @@
+---
+title: Project Architecture
+description: High-level architecture and folder structure of swift17-ui
+tags: [architecture, structure, folders]
+---
+
+# Project Architecture
+
+## Root-Level Structure
+
+```
+swift17-ui/
+├── app/                    # Next.js App Router (routes)
+│   ├── (dashboard)/        # Protected routes with dashboard layout
+│   ├── login/              # Auth routes
+│   └── ...
+│
+├── features/               # Feature modules (MAIN DEVELOPMENT AREA)
+│   └── [feature-name]/
+│       ├── components/     # ✅ Feature components
+│       ├── data/           # ✅ Mock data
+│       ├── schemas/        # ✅ Zod schemas
+│       ├── utils/          # ✅ Feature utilities
+│       ├── constants/      # (rare)
+│       ├── hooks/          # (rare)
+│       └── contexts/       # (rare)
+│
+├── types/                  # ⭐ ALL TYPES GO HERE (centralized)
+│   ├── [feature].types.ts  # Feature-specific types
+│   └── index.ts            # Type exports
+│
+├── components/             # Shared UI components
+│   ├── ui/                 # shadcn/ui components (DON'T MODIFY STRUCTURE)
+│   └── layout/             # Layout components (header, sidebar, footer)
+│
+├── convex/                 # Convex backend
+│   ├── _serverActions/    # Server-side actions
+│   ├── _schemas/          # Database schemas
+│   └── [entity].ts        # Entity definitions
+│
+├── hooks/                  # Global custom hooks
+├── lib/                    # Utility libraries
+├── providers/              # React context providers (if any)
+├── stores/                 # Zustand stores
+├── styles/                 # Global styles
+└── public/                 # Static assets
+```
+
+## Key Architectural Principles
+
+### 1. Feature-Based Organization
+
+Features are self-contained modules with their own:
+- Components
+- Types (referenced from `types/`)
+- Data/mocks
+- Schemas
+- Utilities
+
+### 2. Centralized Types
+
+**ALL types go in `types/` folder** - never in feature folders or component files.
+
+### 3. Shared vs Feature-Specific
+
+- **Shared components**: Used across 3+ features → `components/`
+- **Feature components**: Used within one feature → `features/[name]/components/`
+- **Global utilities**: Used across features → `lib/`
+- **Feature utilities**: Used within one feature → `features/[name]/utils/`
+
+### 4. Backend Architecture
+
+- **Convex** handles all backend operations
+- Queries, mutations, and actions are in `convex/`
+- Server actions are in `convex/_serverActions/`
+
+### 5. State Management
+
+- **Zustand stores** in `stores/` for shared UI state
+- **React Context** (rare) for feature-specific contexts
+- **Local state** with `useState` for component-specific state
+
+## Import Rules
+
+1. **Features** can import from:
+   - `components/` (shared UI)
+   - `lib/` (utilities)
+   - `types/` (type definitions)
+   - `stores/` (Zustand stores)
+   - Same feature folder
+
+2. **Features** should NOT import from:
+   - Other feature folders
+   - `app/` routes
+
+3. **App routes** import from:
+   - `features/` (feature components)
+   - `components/` (shared UI)
+   - `lib/` (utilities)

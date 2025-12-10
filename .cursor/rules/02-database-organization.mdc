@@ -1,0 +1,380 @@
+---
+description: Database organization following Convex-style patterns for all database providers
+globs:
+  - "src/db/**"
+  - "src/convex/**"
+alwaysApply: true
+---
+
+# Database Organization Rules
+
+## Folder Naming
+
+- **Use `/convex`** when using Convex as database provider
+- **Use `/db`** for all other databases (PostgreSQL, MySQL, MongoDB, etc.)
+
+## Folder Structure
+
+```
+db/ (or convex/)
+├── db-schemas/              # Database schemas
+│   ├── user-table-schema.ts
+│   └── product-catalog-schema.ts
+└── db-actions/              # Grouped by table
+    ├── db-user-actions/
+    │   ├── db-create-user-action.ts
+    │   ├── db-update-user-action.ts
+    │   └── db-delete-user-action.ts
+    └── db-product-catalog-actions/
+        ├── db-create-product-action.ts
+        ├── db-update-product-action.ts
+        └── db-delete-product-action.ts
+```
+
+## Naming Conventions
+
+### Folders
+- **Prefix database folders**: `db-schemas/`, `db-actions/`
+- **Prefix action subfolders**: `db-user-actions/`, `db-product-catalog-actions/`
+
+### Files
+- **Prefix all schema files with table name**: `user-table-schema.ts`
+- **Prefix all action files with `db-` and action type**: 
+  - `db-create-user-action.ts`
+  - `db-update-user-action.ts`
+  - `db-delete-user-action.ts`
+  - `db-get-users-action.ts`
+
+### Examples
+```
+✅ CORRECT:
+db/db-schemas/user-table-schema.ts
+db/db-actions/db-user-actions/db-create-user-action.ts
+db/db-actions/db-user-actions/db-update-user-action.ts
+
+❌ INCORRECT:
+db/schemas/schema.ts
+db/actions/user-table/create.ts
+db/actions/create-user.ts
+```
+
+## Database Organization Patterns
+
+- **Schemas**: Define data structures and validation
+- **Actions**: All database operations (CRUD, complex queries, etc.)
+- **Group by table**: Keep all actions for a table together
+- Follow this pattern regardless of actual database provider
+
+## Example Schema
+
+```typescript
+// db/db-schemas/user-table-schema.ts
+import { z } from 'zod'
+
+export const userTableSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string().email(),
+  createdAt: z.string(), // yyyy-mm-dd or dd/mm/yyyy format
+})
+
+export type TUserTable = z.infer<typeof userTableSchema>
+```
+
+## Example Actions
+
+```typescript
+// db/db-actions/db-user-actions/db-get-users-action.ts
+import { db } from '@/lib/db-client'
+import type { TUserTable } from '../../db-schemas/user-table-schema'
+
+/**
+ * Fetch all users from the database
+ */
+export async function getUsersAction(): Promise<TUserTable[]> {
+  return await db.query.users.findMany()
+}
+
+/**
+ * Fetch a single user by ID
+ */
+export async function getUserByIdAction(id: string): Promise<TUserTable | null> {
+  return await db.query.users.findFirst({ where: { id } })
+}
+```
+
+```typescript
+// db/db-actions/db-user-actions/db-create-user-action.ts
+import { db } from '@/lib/db-client'
+import type { TUserTable } from '../../db-schemas/user-table-schema'
+
+/**
+ * Create a new user in the database
+ */
+export async function createUserAction(
+  data: Omit<TUserTable, 'id'>
+): Promise<TUserTable> {
+  return await db.insert.users.values(data).returning()
+}
+```
+
+```typescript
+// db/db-actions/db-user-actions/db-update-user-action.ts
+import { db } from '@/lib/db-client'
+import type { TUserTable } from '../../db-schemas/user-table-schema'
+
+/**
+ * Update an existing user by ID
+ */
+export async function updateUserAction(
+  id: string,
+  data: Partial<TUserTable>
+): Promise<TUserTable> {
+  return await db.update.users.set(data).where({ id }).returning()
+}
+```
+
+```typescript
+// db/db-actions/db-user-actions/db-delete-user-action.ts
+import { db } from '@/lib/db-client'
+import type { TUserTable } from '../../db-schemas/user-table-schema'
+
+/**
+ * Delete a user by ID
+ */
+export async function deleteUserAction(id: string): Promise<void> {
+  await db.delete.users.where({ id })
+}
+```
+
+## Import Rules
+
+**Database files CAN import**:
+- Other DB files: `import { userTableSchema } from '../../db-schemas/user-table-schema'`
+- Shared utilities: `import { db } from '@/lib/db-client'`
+- External libraries: `import { z } from 'zod'`
+
+**Database files CANNOT import**:
+- Features: `import { UserTable } from '@/features/user-table'` ❌
+- Components: `import { Button } from '@/components/ui/button'` ❌
+- App routes: `import { Layout } from '@/app/layout'` ❌
+
+**Why?** Database layer should be independent of UI concerns.
+
+---
+
+## Caching Strategy
+
+### When NOT Using Convex
+
+**CRITICAL**: When using databases other than Convex (PostgreSQL, MySQL, MongoDB, etc.), use Next.js experimental caching features.
+
+#### 1. Enable `use cache` in next.config.ts
+
+```typescript
+import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
+  experimental: {
+    useCache: true,
+  },
+}
+
+export default nextConfig
+```
+
+#### 2. Use `use cache` Directive
+
+Add `'use cache'` to database action functions:
+
+```typescript
+// db/db-actions/db-user-actions/db-get-users-action.ts
+import { db } from '@/lib/db-client'
+import type { TUserTable } from '../../db-schemas/user-table-schema'
+
+/**
+ * Fetch all users from the database
+ * Cached with 15-minute default revalidation
+ */
+export async function getUsersAction(): Promise<TUserTable[]> {
+  'use cache'
+  return await db.query.users.findMany()
+}
+```
+
+#### 3. Configure Cache Lifetime with `cacheLife`
+
+Set custom revalidation periods for different data types:
+
+```typescript
+// db/db-actions/db-user-actions/db-get-users-action.ts
+import { cacheLife } from 'next/cache'
+
+/**
+ * Fetch all users with custom cache lifetime
+ */
+export async function getUsersAction(): Promise<TUserTable[]> {
+  'use cache'
+  cacheLife('hours') // Revalidate every hour
+  return await db.query.users.findMany()
+}
+
+/**
+ * Fetch user statistics (rarely changes)
+ */
+export async function getUserStatsAction(): Promise<TUserStats> {
+  'use cache'
+  cacheLife('days') // Revalidate once per day
+  return await db.query.userStats.findFirst()
+}
+```
+
+**Available cache profiles:**
+- `'seconds'` - Revalidate every few seconds (real-time data)
+- `'minutes'` - Revalidate every few minutes (default: 15 minutes)
+- `'hours'` - Revalidate every hour (frequently updated)
+- `'days'` - Revalidate daily (stable data)
+- `'weeks'` - Revalidate weekly (rarely changes)
+- `'max'` - Cache indefinitely until manually revalidated
+
+#### 4. On-Demand Revalidation with `cacheTag`
+
+Use cache tags for manual cache invalidation:
+
+```typescript
+// db/db-actions/db-user-actions/db-get-users-action.ts
+import { cacheTag } from 'next/cache'
+
+/**
+ * Fetch all users with cache tag
+ */
+export async function getUsersAction(): Promise<TUserTable[]> {
+  'use cache'
+  cacheTag('users-list')
+  return await db.query.users.findMany()
+}
+```
+
+Then revalidate when data changes:
+
+```typescript
+// db/db-actions/db-user-actions/db-create-user-action.ts
+import { revalidateTag } from 'next/cache'
+
+/**
+ * Create a new user and invalidate users cache
+ */
+export async function createUserAction(
+  data: Omit<TUserTable, 'id'>
+): Promise<TUserTable> {
+  const user = await db.insert.users.values(data).returning()
+  
+  // Invalidate the users list cache
+  revalidateTag('users-list')
+  
+  return user
+}
+```
+
+#### 5. Complete Example
+
+```typescript
+// db/db-actions/db-user-actions/db-get-users-action.ts
+import { cacheLife, cacheTag } from 'next/cache'
+import { db } from '@/lib/db-client'
+import type { TUserTable } from '../../db-schemas/user-table-schema'
+
+/**
+ * Fetch all users from the database
+ * - Cached with hourly revalidation
+ * - Tagged for on-demand invalidation
+ */
+export async function getUsersAction(): Promise<TUserTable[]> {
+  'use cache'
+  cacheLife('hours')
+  cacheTag('users-list')
+  
+  return await db.query.users.findMany()
+}
+
+/**
+ * Fetch a single user by ID
+ * - Cached with daily revalidation (user details rarely change)
+ * - Tagged with user-specific tag
+ */
+export async function getUserByIdAction(id: string): Promise<TUserTable | null> {
+  'use cache'
+  cacheLife('days')
+  cacheTag('user', `user-${id}`)
+  
+  return await db.query.users.findFirst({ where: { id } })
+}
+```
+
+```typescript
+// db/db-actions/db-user-actions/db-update-user-action.ts
+import { revalidateTag } from 'next/cache'
+import { db } from '@/lib/db-client'
+import type { TUserTable } from '../../db-schemas/user-table-schema'
+
+/**
+ * Update an existing user by ID
+ * Invalidates both the user list and specific user cache
+ */
+export async function updateUserAction(
+  id: string,
+  data: Partial<TUserTable>
+): Promise<TUserTable> {
+  const user = await db.update.users.set(data).where({ id }).returning()
+  
+  // Invalidate caches
+  revalidateTag('users-list')
+  revalidateTag(`user-${id}`)
+  
+  return user
+}
+```
+
+#### Cache Configuration in next.config.ts
+
+Configure global cache lifetimes:
+
+```typescript
+import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
+  experimental: {
+    useCache: true,
+  },
+  cacheLife: {
+    default: {
+      stale: 900,      // 15 minutes (900 seconds)
+      revalidate: 3600, // 1 hour (3600 seconds)
+      expire: 86400,    // 1 day (86400 seconds)
+    },
+  },
+}
+
+export default nextConfig
+```
+
+### Documentation References
+
+- [Next.js `use cache` directive](https://nextjs.org/docs/app/api-reference/directives/use-cache)
+- [Next.js `cacheLife` API](https://nextjs.org/docs/app/api-reference/functions/cacheLife)
+- [Next.js `cacheTag` API](https://nextjs.org/docs/app/api-reference/functions/cacheTag)
+
+---
+
+## Searchability
+
+**Benefit of prefixed folders and files:**
+
+Search for `db-user` finds:
+- ✅ `db-user-actions/` folder
+- ✅ `db-create-user-action.ts` file
+- ✅ `db-update-user-action.ts` file
+- ✅ `db-delete-user-action.ts` file
+- ✅ All user-related database operations!
+
+**Complete database context in one search!** 🎯

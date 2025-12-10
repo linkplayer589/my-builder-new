@@ -1,0 +1,240 @@
+---
+description: Strict import boundaries for maintainability and portability
+alwaysApply: true
+---
+
+# Import Rules
+
+## Quick Reference
+
+| Location | ✅ CAN Import | ❌ CANNOT Import |
+|----------|---------------|------------------|
+| `/app` | `/features` only | Everything else |
+| `/features/[name]` | `/components`, `/lib`, `/db`, same feature | Other features, `/app` |
+| `/components` | `/components`, `/lib` | `/features`, `/db`, `/app` |
+| `/db` or `/convex` | `/lib`, same db files | `/features`, `/components`, `/app` |
+
+---
+
+## /app Routes
+
+**Rule**: App routes ONLY import from `/features`
+
+### ✅ Allowed
+
+```typescript
+import { UserTable } from '@/features/user-table'
+import { ProductCatalog } from '@/features/product-catalog'
+import { Dashboard } from '@/features/dashboard'
+```
+
+### ❌ Not Allowed
+
+```typescript
+import { Button } from '@/components/ui/button'      // ❌ Use features instead
+import { getUserData } from '@/db/queries'            // ❌ Use features instead
+import { formatDate } from '@/lib/utils'              // ❌ Use features instead
+```
+
+### Why?
+
+Routes should only compose features. All logic lives in features. This ensures:
+- Clean separation of concerns
+- Features handle all business logic
+- Routes are simple composition layers
+
+---
+
+## /features Modules
+
+**Rule**: Features are self-contained and portable
+
+### ✅ Allowed
+
+```typescript
+import { Button } from '@/components/ui/button'           // Generic components
+import { formatDate } from '@/lib/utils'                  // Shared utilities
+import { getUserQuery } from '@/db/queries'               // Database layer
+import { useUserTable } from '../hooks/user-table-hooks' // Same feature
+import { UserDetails } from './features/user-details'    // Nested features
+```
+
+### ❌ Not Allowed
+
+```typescript
+import { ProductCard } from '@/features/product-catalog'  // Other features
+import { AdminLayout } from '@/app/admin/layout'          // App routes
+```
+
+### Why?
+
+Features must be independent for portability. Cross-feature imports create tight coupling that breaks when copying features to other projects.
+
+---
+
+## /components Generic UI
+
+**Rule**: Generic components are pure UI with no business logic
+
+### ✅ Allowed
+
+```typescript
+import { cn } from '@/lib/utils'                  // Shared utilities
+import { Card } from './card'                     // Other components
+import { Button } from './button'                 // Other components
+```
+
+### ❌ Not Allowed
+
+```typescript
+import { useUserTable } from '@/features/user-table' // Features
+import { getUserQuery } from '@/db/queries'          // Database
+import { AdminPage } from '@/app/admin/page'         // App routes
+```
+
+### Why?
+
+Generic components should be pure UI with no feature or database dependencies. This ensures they're truly generic and reusable.
+
+---
+
+## /db or /convex Database Layer
+
+**Rule**: Database layer is independent of UI concerns
+
+### ✅ Allowed
+
+```typescript
+import { z } from 'zod'                           // External libraries
+import { db } from '@/lib/db-client'              // Shared utilities
+import { userTableSchema } from './schemas'       // Other DB files
+```
+
+### ❌ Not Allowed
+
+```typescript
+import { UserTable } from '@/features/user-table' // Features
+import { Button } from '@/components/ui/button'   // Components
+import { AdminPage } from '@/app/admin/page'      // App routes
+```
+
+### Why?
+
+Database layer should be independent of UI concerns. It should only know about data structures, not how they're displayed.
+
+---
+
+## /lib Shared Utilities
+
+**Rule**: Shared utilities are framework-agnostic helpers
+
+### ✅ Allowed
+
+```typescript
+import { format } from 'date-fns'                 // External libraries
+import { clsx } from 'clsx'                       // External libraries
+import { otherUtil } from './other-util'          // Other utilities
+```
+
+### ❌ Not Allowed
+
+```typescript
+import { UserTable } from '@/features/user-table' // Features
+import { Button } from '@/components/ui/button'   // Components
+import { getUserQuery } from '@/db/queries'       // Database
+import { AdminPage } from '@/app/admin/page'      // App routes
+```
+
+### Why?
+
+Utilities should be pure functions with no dependencies on features, components, or database. They should be highly portable.
+
+---
+
+## Nested Features Special Rules
+
+**Rule**: Nested features can import from parent feature
+
+```typescript
+// features/user-table/features/user-details/components/user-details-form.tsx
+
+// ✅ Can import from parent feature
+import { useUserTable } from '../../hooks/user-table-hooks'
+import { TUserTable } from '../../types/user-table-types'
+
+// ✅ Can import generic components
+import { Input } from '@/components/ui/input'
+
+// ✅ Can import shared utilities
+import { formatDate } from '@/lib/utils'
+
+// ❌ CANNOT import from other top-level features
+import { ProductCard } from '@/features/product-catalog' // ❌
+```
+
+### Why?
+
+Nested features indicate parent-only usage. They can use parent feature resources but remain independent from other top-level features.
+
+---
+
+## Import Violation Examples
+
+### Example 1: App importing from components
+
+```typescript
+// app/admin/users/page.tsx
+import { Button } from '@/components/ui/button' // ❌ WRONG
+
+// ✅ CORRECT: Import from feature that uses the button
+import { UserTable } from '@/features/user-table'
+```
+
+### Example 2: Cross-feature imports
+
+```typescript
+// features/user-table/components/user-table-row.tsx
+import { ProductCard } from '@/features/product-catalog' // ❌ WRONG
+
+// ✅ CORRECT: Move shared code to /components or duplicate
+import { GenericCard } from '@/components/ui/card'
+```
+
+### Example 3: Component importing database
+
+```typescript
+// components/ui/data-table.tsx
+import { getUsersQuery } from '@/db/queries' // ❌ WRONG
+
+// ✅ CORRECT: Pass data as props
+export function DataTable({ data }) {
+  // Component receives data, doesn't fetch it
+}
+```
+
+---
+
+## Enforcement Checklist
+
+Use these commands to verify import rules:
+
+```bash
+# Check app only imports features
+grep -r "from '@/components\|from '@/lib\|from '@/db'" app/
+
+# Check for cross-feature imports
+grep -r "from '@/features/" features/user-table/
+
+# Check components don't import features
+grep -r "from '@/features\|from '@/db'" components/
+```
+
+---
+
+## Benefits of These Rules
+
+1. **Portability** - Features can be copied between projects
+2. **Maintainability** - Clear boundaries prevent spaghetti code
+3. **Testability** - Isolated features are easier to test
+4. **Scalability** - Independent features scale better
+5. **Clarity** - Clear dependencies make code easier to understand

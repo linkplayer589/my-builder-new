@@ -1,0 +1,530 @@
+---
+description: Documentation standards for features, components, and subfeatures
+globs:
+  - "src/features/**"
+  - "src/components/**"
+alwaysApply: true
+---
+
+# Documentation Standards
+
+## Core Principle
+
+**Every feature, component, and subfeature MUST have comprehensive documentation** that enables professional software development AI to understand and work with the code effectively.
+
+---
+
+## Documentation File Requirement
+
+### Naming Convention
+
+Each feature/component/subfeature MUST have a documentation file:
+
+**Format**: `[name]-docs.md`
+
+**Examples**:
+```
+✅ CORRECT:
+features/user-table/user-table-docs.md
+features/user-table/features/user-details/user-details-docs.md
+features/product-catalog/product-catalog-docs.md
+components/ui/button/button-docs.md
+```
+
+### Location
+
+- **Top-level features**: `features/[feature-name]/[feature-name]-docs.md`
+- **Nested features**: `features/[parent]/features/[nested]/[nested]-docs.md`
+- **Components**: `components/[component-name]/[component-name]-docs.md`
+
+---
+
+## Documentation Structure
+
+Each `[name]-docs.md` file MUST contain the following sections:
+
+### 1. Overview
+
+Detailed explanation of what the feature/component does, including:
+- Purpose and primary use case
+- Key functionality
+- User interactions
+- Business logic
+- Integration points
+
+### 2. File Tree with Explanations
+
+Complete file structure with detailed descriptions of what happens in each file:
+
+```markdown
+## File Tree
+
+\```
+feature-name/
+├── feature-name-components/
+│   ├── feature-name-header.tsx
+│   │   → Renders the header section with title, search, and actions
+│   │   → Manages search input state and debouncing
+│   │   → Emits onSearch and onAdd events to parent
+│   │
+│   ├── feature-name-row.tsx
+│   │   → Individual row component for data display
+│   │   → Handles row selection and click events
+│   │   → Renders action buttons (edit, delete)
+│   │
+│   └── feature-name-footer.tsx
+│       → Pagination controls and page size selector
+│       → Displays total count and current page info
+│
+├── feature-name-hooks/
+│   └── feature-name-hooks.ts
+│       → useFeatureName: Main data fetching and state management
+│       → useFeatureNameFilters: Filter state and validation
+│       → useFeatureNamePagination: Pagination logic
+│
+├── feature-name-utils/
+│   └── feature-name-utils.ts
+│       → sortFeatureNameData: Sorting algorithm for table data
+│       → filterFeatureNameData: Multi-criteria filtering
+│       → validateFeatureNameInput: Input validation helpers
+│
+├── feature-name-types/
+│   └── feature-name-types.ts
+│       → TFeatureNameProps: Component prop types
+│       → TFeatureName: Core data structure
+│       → TFeatureNameFilter: Filter configuration types
+│
+└── index.ts
+    → Public API exports for external consumption
+\```
+```
+
+### 3. Function Documentation
+
+Detailed documentation for every exported function, hook, and component:
+
+```markdown
+## Functions & Components
+
+### useFeatureName()
+
+**Purpose**: Primary hook for managing feature data and state
+
+**Parameters**:
+- `initialData?: TFeatureName[]` - Optional initial data to hydrate state
+- `options?: TFeatureNameOptions` - Configuration options
+
+**Returns**:
+- `data: TFeatureName[]` - Current data array
+- `isLoading: boolean` - Loading state indicator
+- `error: Error | null` - Error state if fetch fails
+- `refetch: () => Promise<void>` - Manual refetch function
+
+**Side Effects**:
+- Fetches data from `/api/feature-name` on mount
+- Sets up auto-refresh every 30 seconds
+- Logs events to PostHog: `feature_name_loaded`, `feature_name_error`
+
+**Example Usage**:
+\```typescript
+const { data, isLoading, error, refetch } = useFeatureName()
+\```
+
+**Internal Logic**:
+1. Initializes state with initialData or empty array
+2. Calls getFeatureNameQuery from database layer
+3. Transforms response data using transformFeatureNameData util
+4. Updates state and triggers re-render
+5. Logs success/error events to PostHog
+
+**Dependencies**:
+- `@/db/queries/feature-name-queries` - getFeatureNameQuery
+- `@/lib/posthog` - Event logging
+- `../utils/feature-name-utils` - transformFeatureNameData
+
+---
+
+### FeatureNameHeader
+
+**Purpose**: Header component with search and action controls
+
+**Props**:
+- `onSearch?: (query: string) => void` - Search callback
+- `onAdd?: () => void` - Add button callback
+- `title?: string` - Optional custom title (default: "Feature Name")
+
+**State**:
+- `searchQuery: string` - Local search input state
+- `debouncedQuery: string` - Debounced search value (500ms)
+
+**Events**:
+- `onSearch` - Emitted when debounced query changes
+- `onAdd` - Emitted when add button clicked
+
+**Rendering Logic**:
+1. Displays title in h2 heading
+2. Renders search input with debounce
+3. Shows add button if onAdd provided
+4. Applies responsive layout (mobile: stack, desktop: row)
+
+**PostHog Events**:
+- `feature_name_search_performed` - When user searches
+- `feature_name_add_clicked` - When add button clicked
+
+**Example Usage**:
+\```typescript
+<FeatureNameHeader 
+  title="Custom Title"
+  onSearch={(q) => console.log(q)} 
+  onAdd={() => openModal()} 
+/>
+\```
+```
+
+### 4. State Management
+
+Document all state management patterns:
+
+```markdown
+## State Management
+
+### Local State
+- `searchQuery` (FeatureNameHeader) - Search input value
+- `selectedRows` (FeatureNameTable) - Selected row IDs
+- `sortConfig` (FeatureNameTable) - Current sort configuration
+
+### Global State
+- None (fully self-contained)
+
+### Server State
+- Managed by `useFeatureName` hook
+- Cache key: `['feature-name', filters]`
+- Refetch interval: 30 seconds
+- Stale time: 5 minutes
+```
+
+### 5. External Dependencies
+
+List all external libraries and their usage:
+
+```markdown
+## External Dependencies
+
+### Production Dependencies
+- `react` (^18.2.0) - Component framework
+- `zod` (^3.22.0) - Schema validation in types
+- `date-fns` (^2.30.0) - Date formatting utilities
+
+### Internal Dependencies
+- `@/components/ui/button` - Generic button component
+- `@/components/ui/input` - Generic input component
+- `@/lib/utils` - formatDate, cn utilities
+- `@/db/queries/feature-name-queries` - Database queries
+
+### Why These Dependencies?
+- `zod`: Type-safe runtime validation for API responses
+- `date-fns`: Consistent date formatting (dd/mm/yyyy)
+```
+
+### 6. Usage Examples
+
+Provide comprehensive usage examples:
+
+```markdown
+## Usage Examples
+
+### Basic Usage
+
+\```typescript
+import { FeatureName } from '@/features/feature-name'
+
+export default function Page() {
+  return <FeatureName />
+}
+\```
+
+### With Initial Data
+
+\```typescript
+import { FeatureName } from '@/features/feature-name'
+
+export default function Page({ data }) {
+  return <FeatureName initialData={data} />
+}
+\```
+
+### With Custom Callbacks
+
+\```typescript
+import { FeatureName } from '@/features/feature-name'
+
+export default function Page() {
+  const handleRowClick = (item) => {
+    console.log('Clicked:', item)
+  }
+
+  return (
+    <FeatureName 
+      onRowClick={handleRowClick}
+      onAdd={() => router.push('/add')}
+    />
+  )
+}
+\```
+```
+
+### 7. Testing Guidelines
+
+Document testing approach:
+
+```markdown
+## Testing Guidelines
+
+### Unit Tests Required For
+- All utility functions in `feature-name-utils.ts`
+- All custom hooks in `feature-name-hooks.ts`
+- Data transformation functions
+
+### Integration Tests Required For
+- Component interactions (search, filter, pagination)
+- Data fetching and error handling
+- User event flows
+
+### Test Files
+- `feature-name-utils.test.ts` - Utility function tests
+- `feature-name-hooks.test.ts` - Hook behavior tests
+- `feature-name-header.test.tsx` - Component tests
+```
+
+### 8. Known Issues & Limitations
+
+Document any limitations:
+
+```markdown
+## Known Issues & Limitations
+
+### Current Limitations
+1. Does not support bulk operations (planned for v2.0)
+2. Search is client-side only (server-side search in roadmap)
+3. Maximum 1000 items due to pagination constraints
+
+### Browser Compatibility
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+
+### Performance Notes
+- Optimal for datasets < 1000 items
+- Consider virtualization for larger datasets
+```
+
+### 9. Change Log
+
+Track significant changes:
+
+```markdown
+## Change Log
+
+### [1.2.0] - 2025-10-02
+- Added search functionality with debounce
+- Implemented server-side pagination
+- Fixed: Memory leak in useEffect cleanup
+
+### [1.1.0] - 2025-09-15
+- Added bulk selection feature
+- Improved error handling
+- Updated TypeScript types for better inference
+
+### [1.0.0] - 2025-09-01
+- Initial release
+- Basic CRUD operations
+- Client-side filtering and sorting
+```
+
+---
+
+## Documentation Update Requirements
+
+### When to Update Documentation
+
+Documentation MUST be updated:
+
+1. **After every code change** that affects:
+   - Function signatures
+   - Component props
+   - State management
+   - External dependencies
+   - File structure
+
+2. **When adding**:
+   - New functions
+   - New components
+   - New files
+   - New dependencies
+
+3. **When removing**:
+   - Deprecated functions
+   - Unused components
+   - Old files
+
+### Update Process
+
+1. **Immediate**: Update function/component documentation inline (JSDoc)
+2. **Immediate**: Update the `[name]-docs.md` file in the same commit
+3. **Required**: Include documentation updates in PR description
+4. **Verification**: Documentation review required before PR approval
+
+---
+
+## Documentation Quality Standards
+
+### Writing Style
+
+- **Be explicit**: Don't assume reader knows context
+- **Be detailed**: Explain WHY, not just WHAT
+- **Be accurate**: Keep in sync with actual code
+- **Be structured**: Use consistent formatting
+- **Be professional**: Write for AI and human developers
+
+### Required Detail Level
+
+Each function documentation MUST include:
+
+1. **Purpose** - What it does and why it exists
+2. **Parameters** - Every parameter with type and description
+3. **Returns** - Return type and value description
+4. **Side Effects** - Any state changes, API calls, logging
+5. **Example Usage** - At least one code example
+6. **Internal Logic** - Step-by-step flow explanation
+7. **Dependencies** - All imports and why they're needed
+8. **Error Handling** - What errors can occur and how they're handled
+9. **Performance** - Time/space complexity if relevant
+10. **PostHog Events** - All analytics events triggered
+
+### For AI Consumption
+
+Documentation should enable an AI to:
+
+- Understand the complete feature without reading code
+- Modify functions correctly by understanding their contract
+- Trace data flow through the system
+- Identify side effects and dependencies
+- Generate test cases based on specifications
+- Refactor safely with full context
+
+---
+
+## Template
+
+Use this template for new documentation files:
+
+\```markdown
+# [Feature Name] Documentation
+
+## Overview
+
+[Detailed explanation of what this feature does, its purpose, and key functionality]
+
+## File Tree
+
+\```
+[feature-name]/
+├── [feature-name]-components/
+│   └── [file].tsx
+│       → [Detailed explanation]
+├── [feature-name]-hooks/
+│   └── [file].ts
+│       → [Detailed explanation]
+└── index.ts
+    → [Detailed explanation]
+\```
+\```
+
+## Functions & Components
+
+### [FunctionName]
+
+**Purpose**: [Detailed purpose]
+
+**Parameters**:
+- `param1: Type` - [Description]
+
+**Returns**:
+- `ReturnType` - [Description]
+
+**Side Effects**:
+- [List all side effects]
+
+**Example Usage**:
+\```typescript
+// [Example code]
+\```
+
+**Internal Logic**:
+1. [Step by step]
+
+**Dependencies**:
+- [List all dependencies]
+
+## State Management
+
+[Document state]
+
+## External Dependencies
+
+[List dependencies with versions and why]
+
+## Usage Examples
+
+[Comprehensive examples]
+
+## Testing Guidelines
+
+[Testing requirements]
+
+## Known Issues & Limitations
+
+[Document limitations]
+
+## Change Log
+
+### [Version] - [Date]
+- [Changes]
+\```
+\```
+
+---
+
+## Enforcement
+
+### Code Review Requirements
+
+- Documentation updates MUST be included in every PR
+- Documentation quality is part of code review
+- PRs without updated documentation will be rejected
+
+### Automated Checks
+
+Verify documentation exists for:
+- Every feature directory
+- Every component directory
+- Every subfeature directory
+
+---
+
+## Benefits
+
+1. **AI-Friendly** - Professional AI can understand and modify code
+2. **Onboarding** - New developers understand system quickly
+3. **Maintenance** - Clear context prevents breaking changes
+4. **Debugging** - Documentation helps trace issues
+5. **Refactoring** - Safe refactoring with full context
+6. **Testing** - Documentation guides test creation
+7. **Portability** - Features are self-documenting when copied
+
+---
+
+## Example: Complete Documentation File
+
+See `.cursor/examples/user-table-docs.md` for a complete reference implementation demonstrating all required sections and detail level.

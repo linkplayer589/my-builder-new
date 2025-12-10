@@ -1,0 +1,201 @@
+---
+description: Project rules overview and quick reference
+alwaysApply: true
+---
+
+# Cursor Rules - Project Architecture
+
+## 📋 Rules Files Overview
+
+This directory contains the complete architectural rules for this project:
+
+1. **01-architecture-overview.mdc** - Core philosophy and principles
+2. **02-database-organization.mdc** - Database structure (Convex-style)
+3. **03-feature-architecture.mdc** - Feature structure and portability
+4. **04-import-rules.mdc** - Import boundaries and dependencies
+5. **05-naming-conventions.mdc** - File and code naming patterns
+6. **06-code-style.mdc** - TypeScript, comments, and code standards
+7. **07-documentation-standards.mdc** - Comprehensive documentation requirements
+8. **08-package-manager.mdc** - Package manager rules (ALWAYS use pnpm)
+
+## 🎯 Quick Reference
+
+### The Four Golden Rules
+
+1. **Prefix Everything** - `[feature-name]-[descriptor].[ext]` for files AND folders
+2. **Features Are Portable** - No cross-feature imports
+3. **App Imports Features Only** - `/app` → `/features` only
+4. **Always Use pnpm** - Never use npm or yarn
+
+### Folder Structure
+
+```
+src/
+├── app/              # ONLY imports from /features
+├── features/         # Self-contained, portable modules
+├── components/       # Generic UI (no feature deps)
+├── db/ OR convex/    # Database layer (Convex-style)
+└── lib/              # Shared utilities
+```
+
+### Import Rules Quick Check
+
+| From | Can Import | Cannot Import |
+|------|-----------|---------------|
+| `/app` | `/features` | Everything else |
+| `/features` | `/components`, `/lib`, `/db`, same feature | Other features, `/app` |
+| `/components` | `/components`, `/lib` | `/features`, `/db`, `/app` |
+| `/db` or `/convex` | `/lib`, same db | `/features`, `/components`, `/app` |
+
+### File Naming Examples
+
+```
+✅ CORRECT:
+features/user-table/user-table-components/user-table-header.tsx
+features/user-table/user-table-hooks/user-table-hooks.ts
+db/db-schemas/user-table-schema.ts
+db/db-actions/db-user-actions/db-create-user-action.ts
+
+❌ WRONG:
+features/user-table/components/header.tsx
+features/user-table/hooks/hooks.ts
+db/schemas/schema.ts
+db/actions/create-user.ts
+```
+
+## 🔍 The Context Search Test
+
+**Test**: Type a feature name in search (Cmd/Ctrl + P)
+
+**Expected**: ALL related files appear
+
+**Example**: Search "user-table" → Find all user-table files instantly!
+
+## ✅ Feature Checklist
+
+Before considering a feature complete:
+
+- [ ] All files prefixed with feature name
+- [ ] No cross-feature imports
+- [ ] Has `index.ts` with public API
+- [ ] Has `[feature-name]-docs.md` with comprehensive documentation
+- [ ] All functions have JSDoc comments
+- [ ] Documentation includes file tree and examples
+- [ ] Self-contained (components, hooks, utils, types)
+- [ ] Can copy to another project and it works after `pnpm install`
+
+## 📖 Additional Documentation
+
+- `.cursor/ARCHITECTURE.md` - Detailed architecture guide
+- `.cursor/QUICK_REFERENCE.md` - One-page cheat sheet
+
+## 🚀 Quick Start
+
+### Creating a New Feature
+
+1. Create folder: `features/user-table/`
+2. Add prefixed subfolders: `user-table-components/`, `user-table-hooks/`, `user-table-utils/`, `user-table-types/`
+3. Prefix all files: `user-table-*.tsx`
+4. Create `index.ts` with public exports
+5. Import in `/app` route
+
+### Creating Database Table
+
+1. Create schema: `db/db-schemas/user-table-schema.ts`
+2. Create actions folder: `db/db-actions/db-user-actions/`
+3. Create actions: `db-create-user-action.ts`, `db-update-user-action.ts`, `db-delete-user-action.ts`
+4. Use in features via imports
+
+## 🎓 Core Principles
+
+### 1. Feature Portability
+Features must work when copied to another project (after `pnpm install`).
+
+### 2. Context Search Optimization
+File naming enables finding all related files by feature name.
+
+### 3. Strict Boundaries
+Clear import rules prevent tight coupling and dependency hell.
+
+### 4. Convex Patterns
+Database organized with queries/mutations regardless of provider.
+
+### 5. Clean Architecture
+Layered structure with one-way dependencies.
+
+## 📝 Code Standards
+
+- **NEVER use `any` type** - Always define proper types
+- **JSDoc comments** - Document all public APIs
+- **Date formats** - `yyyy-mm-dd` or `dd/mm/yyyy` (NEVER American format)
+- **PostHog logging** - Log all workflows and user actions
+- **Single responsibility** - One component/function = one job
+- **Component-specific files** - If used by ONE component → keep with component as `[component-name]-utils.ts`
+- **Shared feature files** - If used by MANY components → use shared folder `[feature-name]-utils/`
+
+## 🔗 Import Flow
+
+```
+/app routes
+    ↓ (only imports)
+/features
+    ↓ (can import)
+/components, /lib, /db
+```
+
+**Key**: Dependencies flow down, never up or sideways.
+
+## 💡 Benefits
+
+1. **Searchable** - Find everything related to a feature instantly
+2. **Portable** - Copy features between projects easily
+3. **Maintainable** - Clear boundaries prevent spaghetti code
+4. **Scalable** - Independent features scale better
+5. **Testable** - Isolated features are easier to test
+
+## 🛠️ Verification Commands
+
+```bash
+# Search all user-table related files
+Cmd/Ctrl + P → "user-table"
+
+# Check for cross-feature imports
+grep -r "from '@/features/" features/user-table/
+
+# Verify app only imports features
+grep -r "from '@/components\|from '@/lib\|from '@/db'" app/
+
+# Check components don't import features
+grep -r "from '@/features\|from '@/db'" components/
+```
+
+## 📦 Package Manager
+
+**🚨 CRITICAL: ALWAYS use `pnpm` - NEVER use npm or yarn!**
+
+```bash
+# ✅ CORRECT
+pnpm install
+pnpm add [package]
+pnpm remove [package]
+pnpm dev
+
+# ❌ WRONG - Never use these
+npm install     # ❌
+yarn install    # ❌
+npx [command]   # ❌ Use: pnpm dlx [command]
+```
+
+**Why pnpm?**
+- ⚡ 2x faster than npm
+- 💾 Saves disk space
+- 🔒 Better security
+- ✅ Project standard (defined in package.json)
+
+See **08-package-manager.mdc** for complete documentation.
+
+## 🎯 Remember
+
+**Prefix → Portable → Searchable**
+
+If you can't find all related files by searching the feature name, your naming is wrong!

@@ -1,0 +1,77 @@
+---
+title: Tech Stack Reference
+description: Complete list of dependencies, versions, and their usage in swift17-ui
+tags: [dependencies, versions, tech-stack]
+---
+
+# Tech Stack Reference
+
+## Core Framework
+
+- **Next.js 14** - App Router, Server Components, Middleware
+- **React 18** - Latest React features
+- **TypeScript 5** - Strict type checking
+
+## UI & Styling
+
+- **shadcn/ui** - Component library (Radix UI primitives)
+- **Tailwind CSS 3.4.17** - Utility-first CSS with CSS variables
+- **Lucide React** - Icon library
+- **next-themes** - Dark mode support
+- **React Icons** - Additional icon library
+
+## State & Data
+
+- **Zustand latest** - Lightweight state management
+- **Convex 1.28.0** - Backend-as-a-service (database, queries, mutations, actions)
+- **React Hook Form** - Form handling (if used)
+- **Zod** - Schema validation (if used)
+- **Immer latest** - Immutable state updates
+
+## Visualization
+
+- **Recharts 2.15.3** - Charts and graphs
+- **D3 Scale** - Data transformations (if needed)
+
+## Utilities
+
+- **date-fns latest** - Date manipulation
+- **Sonner** - Toast notifications (via shadcn/ui - Radix UI Toast)
+- **@dnd-kit** - Drag and drop functionality
+- **PostHog 1.281.0** - Analytics and event tracking
+- **Motion 12.23.24** - Animation library
+- **React Day Picker** - Date picker component
+- **React Resizable Panels** - Resizable panel layouts
+- **Vaul** - Drawer component
+- **xlsx** - Excel export (if needed - not currently in package.json)
+- **html-to-image** - Export to images (if needed - not currently in package.json)
+
+## Development Tools
+
+- **ESLint 9** - Linting
+- **Prettier 3.5.3** - Code formatting
+- **Husky 9.1.7** - Git hooks
+- **lint-staged** - Pre-commit checks
+
+## Package Manager
+
+- **pnpm** - Primary package manager (see package.json for version)
+
+## Important Notes
+
+- All UI components from shadcn/ui are in `components/ui/`
+- Convex handles all backend operations (queries, mutations, actions)
+- Zustand is used for client-side UI state management
+- React Hook Form + Zod can be used for form handling and validation (if needed)
+- PostHog is integrated for analytics tracking
+
+## Note on Guide vs Actual Project
+
+The original guide mentioned some packages that are not currently in `package.json`:
+- **TanStack React Query** - Not currently installed (Convex handles data fetching)
+- **Axios** - Not currently installed (Convex handles API calls)
+- **React WordCloud** - Not currently installed
+- **TanStack React Table** - Not currently installed
+- **nuqs** - Not currently installed
+
+These may be added in the future, but are not part of the current tech stack.

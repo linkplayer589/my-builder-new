@@ -1,0 +1,46 @@
+---
+title: Project Overview - swift17-ui
+description: High-level overview of the swift17-ui project architecture and conventions
+tags: [overview, architecture, introduction]
+---
+
+# Project Overview - swift17-ui
+
+> **Purpose**: This guide provides AI agents with the complete architecture, conventions, and patterns for developing new features in the swift17-ui project. Follow this guide to ensure consistency, maintainability, and best practices.
+
+## Project Summary
+
+**swift17-ui** is a Next.js 14 application built with a feature-based architecture. The project emphasizes:
+
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript 5 (strict mode)
+- **Architecture**: Feature-based organization
+- **UI**: shadcn/ui + Tailwind CSS 3.4.17
+- **State**: Zustand for UI state
+- **Data Fetching**: Convex (backend-as-a-service)
+- **Forms**: React Hook Form + Zod validation
+
+## Core Principles
+
+1. **Feature-Based Organization**: All major functionality is organized into self-contained feature modules
+2. **Type Safety**: Strict TypeScript with centralized type definitions
+3. **Component Reusability**: Shared components in `components/`, feature-specific in `features/[name]/components/`
+4. **Separation of Concerns**: Clear boundaries between features, utilities, and shared code
+
+## Quick Navigation
+
+- [Tech Stack Reference](./01-tech-stack.mdc) - Complete list of dependencies and versions
+- [Architecture Overview](./02-architecture.mdc) - High-level project structure
+- [Feature Development Workflow](./03-feature-workflow.mdc) - Step-by-step guide for new features
+- [Folder Structure Rules](./04-folder-structure.mdc) - Detailed folder organization rules
+- [Naming Conventions](./05-naming-conventions.mdc) - File and folder naming standards
+
+## Important Notes
+
+⚠️ **Project Structure**: This project does NOT use a `src/` folder - all directories are at the root level.
+
+⚠️ **Backend**: This project uses **Convex** for backend operations, not Next.js Server Actions. Server-side logic is in `convex/_serverActions/`.
+
+⚠️ **State Management**: Zustand stores are located in `stores/` at the root level, not `src/store/`.
+
+⚠️ **Utilities**: Global utilities are in `lib/` at the root level, not `src/utils/`.

@@ -1,0 +1,400 @@
+---
+description: Package manager rules - always use pnpm
+alwaysApply: true
+---
+
+# Package Manager Rules
+
+## Core Rule
+
+**ALWAYS use `pnpm` as the package manager** - Never use npm or yarn.
+
+---
+
+## Why pnpm?
+
+1. **Faster** - Installs packages 2x faster than npm
+2. **Disk efficient** - Uses hard links to save disk space
+3. **Strict** - Better dependency management prevents phantom dependencies
+4. **Project standard** - Configured in `package.json` as `"packageManager": "pnpm@9.13.2"`
+
+---
+
+## Required Commands
+
+### Installation
+
+```bash
+# Install all dependencies
+pnpm install
+
+# Install and save to dependencies
+pnpm add [package]
+
+# Install and save to devDependencies
+pnpm add -D [package]
+
+# Install specific version
+pnpm add [package]@[version]
+```
+
+### Removal
+
+```bash
+# Remove a package
+pnpm remove [package]
+
+# Remove dev dependency
+pnpm remove -D [package]
+```
+
+### Updates
+
+```bash
+# Update all packages
+pnpm update
+
+# Update specific package
+pnpm update [package]
+
+# Update to latest versions
+pnpm update --latest
+```
+
+### Running Scripts
+
+```bash
+# Run dev server
+pnpm dev
+
+# Build for production
+pnpm build
+
+# Run linter
+pnpm lint
+
+# Run type checking
+pnpm typecheck
+
+# Format code
+pnpm format:write
+```
+
+---
+
+## ❌ Never Use These
+
+```bash
+# ❌ WRONG - Never use npm
+npm install
+npm add package
+npm run dev
+
+# ❌ WRONG - Never use yarn
+yarn install
+yarn add package
+yarn dev
+
+# ❌ WRONG - Never use npx
+npx create-next-app
+npx shadcn-ui@latest add button
+
+# ✅ CORRECT - Always use pnpm
+pnpm install
+pnpm add package
+pnpm dev
+pnpm dlx create-next-app
+pnpm dlx shadcn@latest add button
+```
+
+---
+
+## pnpm Equivalents
+
+| npm/yarn Command | pnpm Equivalent |
+|------------------|-----------------|
+| `npm install` | `pnpm install` |
+| `npm install [pkg]` | `pnpm add [pkg]` |
+| `npm uninstall [pkg]` | `pnpm remove [pkg]` |
+| `npm run [script]` | `pnpm [script]` |
+| `npx [command]` | `pnpm dlx [command]` |
+| `npm update` | `pnpm update` |
+| `npm outdated` | `pnpm outdated` |
+| `npm list` | `pnpm list` |
+
+---
+
+## Special pnpm Commands
+
+### Using `pnpm dlx`
+
+Instead of `npx`, use `pnpm dlx`:
+
+```bash
+# ✅ CORRECT - Using pnpm dlx
+pnpm dlx create-next-app@latest
+pnpm dlx shadcn@latest add button
+pnpm dlx drizzle-kit generate
+
+# ❌ WRONG - Using npx
+npx create-next-app@latest
+npx shadcn@latest add button
+```
+
+### Workspace Commands
+
+```bash
+# Run command in specific workspace
+pnpm --filter [workspace] [command]
+
+# Install for all workspaces
+pnpm install -r
+
+# Run script in all workspaces
+pnpm -r [script]
+```
+
+---
+
+## Configuration
+
+### package.json
+
+```json
+{
+  "packageManager": "pnpm@9.13.2"
+}
+```
+
+This enforces pnpm version and prevents accidental use of npm/yarn.
+
+### .npmrc
+
+Create `.npmrc` in project root to configure pnpm:
+
+```ini
+# Use pnpm
+enable-pre-post-scripts=true
+auto-install-peers=true
+strict-peer-dependencies=false
+shamefully-hoist=false
+```
+
+---
+
+## CI/CD Configuration
+
+### GitHub Actions
+
+```yaml
+- name: Install pnpm
+  uses: pnpm/action-setup@v2
+  with:
+    version: 9.13.2
+
+- name: Install dependencies
+  run: pnpm install --frozen-lockfile
+```
+
+### Dockerfile
+
+```dockerfile
+# Install pnpm
+RUN npm install -g pnpm@9.13.2
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+```
+
+---
+
+## Troubleshooting
+
+### Lock File Issues
+
+```bash
+# Remove lock file and reinstall
+rm pnpm-lock.yaml
+pnpm install
+
+# Force reinstall all packages
+pnpm install --force
+```
+
+### Cache Issues
+
+```bash
+# Clear pnpm cache
+pnpm store prune
+
+# Verify store integrity
+pnpm store status
+```
+
+### Permission Issues
+
+```bash
+# Fix permission issues
+sudo chown -R $(whoami) ~/.pnpm-store
+```
+
+---
+
+## Project Scripts
+
+All scripts in `package.json` use pnpm:
+
+```json
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "shadcn": "pnpm dlx shadcn@latest",
+    "db:generate": "dotenv drizzle-kit generate",
+    "db:push": "dotenv drizzle-kit push",
+    "db:studio": "dotenv drizzle-kit studio"
+  }
+}
+```
+
+Run with: `pnpm dev`, `pnpm build`, etc.
+
+---
+
+## Documentation Examples
+
+**When writing documentation, ALWAYS use pnpm in examples:**
+
+### ✅ CORRECT
+
+```markdown
+## Installation
+
+\```bash
+pnpm install
+\```
+
+## Add a Dependency
+
+\```bash
+pnpm add react-query
+\```
+```
+
+### ❌ INCORRECT
+
+```markdown
+## Installation
+
+\```bash
+npm install
+# or
+yarn install
+\```
+```
+
+---
+
+## IDE Configuration
+
+### VS Code Settings
+
+Add to `.vscode/settings.json`:
+
+```json
+{
+  "npm.packageManager": "pnpm",
+  "terminal.integrated.env.linux": {
+    "npm_config_user_agent": "pnpm"
+  }
+}
+```
+
+---
+
+## Enforcement
+
+### Pre-commit Hook
+
+Add to `.husky/pre-commit`:
+
+```bash
+#!/bin/sh
+# Check if npm or yarn is being used
+if [ -f "package-lock.json" ] || [ -f "yarn.lock" ]; then
+  echo "❌ Error: Found npm/yarn lock file. Use pnpm only!"
+  exit 1
+fi
+```
+
+### .gitignore
+
+Ensure these are ignored:
+
+```
+# Package manager lock files (only pnpm-lock.yaml should exist)
+package-lock.json
+yarn.lock
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+```
+
+---
+
+## Migration from npm/yarn
+
+If you have existing npm/yarn files:
+
+```bash
+# 1. Remove old lock files
+rm package-lock.json yarn.lock
+
+# 2. Remove node_modules
+rm -rf node_modules
+
+# 3. Install with pnpm
+pnpm install
+
+# 4. Commit pnpm-lock.yaml
+git add pnpm-lock.yaml
+git commit -m "chore: migrate to pnpm"
+```
+
+---
+
+## Benefits Summary
+
+1. **Speed** - Up to 2x faster installs
+2. **Space** - Saves disk space with content-addressable storage
+3. **Security** - Strict dependency resolution prevents supply chain attacks
+4. **Reliability** - Consistent installs across environments
+5. **Monorepo** - First-class workspace support
+
+---
+
+## Support
+
+For pnpm-specific issues:
+- Documentation: https://pnpm.io/
+- GitHub: https://github.com/pnpm/pnpm
+- Discord: https://discord.gg/pnpm
+
+---
+
+## Remember
+
+**🎯 ALWAYS USE PNPM - NEVER npm OR yarn!**
+
+This is a project-wide standard enforced by:
+- ✅ package.json `packageManager` field
+- ✅ Documentation examples
+- ✅ CI/CD pipelines
+- ✅ Developer guidelines
+
+---
+
+**Last Updated**: 2025-10-02  
+**Maintained By**: Development Team

@@ -1,0 +1,173 @@
+---
+title: File Naming Conventions
+description: Naming standards for files, folders, and code in swift17-ui
+tags: [naming, conventions, standards]
+---
+
+# File Naming Conventions
+
+## Folder Naming
+
+### Feature Folders
+- Use **kebab-case**: `features/billing-management/`
+- Be descriptive: `features/user-profile/` not `features/user/`
+- Use singular or plural based on context: `features/contacts/` (plural for collections)
+
+### General Folders
+- Use **kebab-case**: `components/`, `lib/`, `types/`
+- Keep names short and clear: `hooks/`, `stores/`, `styles/`
+
+## File Naming
+
+### TypeScript/React Files
+
+**Components:**
+- Use **PascalCase**: `UserProfile.tsx`, `BillingCard.tsx`
+- Match component name to file name: `export const UserProfile = () => {}` in `UserProfile.tsx`
+
+**Types:**
+- Use **kebab-case** with `.types.ts` suffix: `billing.types.ts`, `user.types.ts`
+- Export types with descriptive names: `TBillingPlan`, `TUserProfile`
+
+**Utilities:**
+- Use **kebab-case** with `.utils.ts` suffix: `date-utils.ts`, `format-utils.ts`
+- Feature-specific: `features/billing/utils/billing.utils.ts`
+
+**Schemas:**
+- Use **kebab-case** with `.schema.ts` suffix: `user.schema.ts`, `billing.schema.ts`
+- Feature-specific: `features/billing/schemas/billing.schema.ts`
+
+**Stores:**
+- Use **kebab-case** with `.store.ts` suffix: `user.store.ts`, `billing.store.ts`
+- Located in `stores/` folder
+
+**Hooks:**
+- Use **kebab-case** with `use-` prefix: `use-user.ts`, `use-billing.ts`
+- Feature-specific: `features/billing/hooks/use-billing.ts`
+- Global: `hooks/use-convex-user.ts`
+
+**Constants:**
+- Use **kebab-case** with descriptive suffix: `billing-config.ts`, `app-constants.ts`
+- Feature-specific: `features/billing/constants/billing-config.ts`
+
+**Mock Data:**
+- Use **kebab-case** with `mock-` prefix: `mock-users.ts`, `mock-billing.ts`
+- Feature-specific: `features/billing/data/mock-billing.ts`
+
+### Convex Files
+
+**Entity Files:**
+- Use **kebab-case**: `users.ts`, `billing.ts`, `events.ts`
+- One entity per file
+
+**Server Actions:**
+- Located in `convex/_serverActions/`
+- Use **kebab-case**: `create-user.action.ts`, `update-billing.action.ts`
+
+**Schemas:**
+- Located in `convex/_schemas/`
+- Use **kebab-case**: `user.schema.ts`, `billing.schema.ts`
+
+## Code Naming
+
+### TypeScript Types
+
+**Type Aliases:**
+- Use `T` prefix: `TBillingPlan`, `TUserProfile`, `TApiResponse`
+- PascalCase after prefix
+
+**Interfaces:**
+- Use `I` prefix (if using interfaces): `IUserService`, `IBillingRepository`
+- PascalCase after prefix
+- Note: Prefer type aliases over interfaces in this project
+
+**Enums:**
+- Use PascalCase: `BillingStatus`, `UserRole`
+- Enum values: `BillingStatus.ACTIVE`, `BillingStatus.CANCELLED`
+
+### Variables and Functions
+
+**Variables:**
+- Use **camelCase**: `userProfile`, `billingPlan`, `isLoading`
+
+**Functions:**
+- Use **camelCase**: `getUserProfile()`, `calculateTotal()`, `formatDate()`
+- Use verb prefixes: `get`, `set`, `create`, `update`, `delete`, `fetch`, `format`
+
+**Constants:**
+- Use **UPPER_SNAKE_CASE**: `MAX_RETRY_COUNT`, `API_BASE_URL`, `DEFAULT_TIMEOUT`
+
+**React Components:**
+- Use **PascalCase**: `UserProfile`, `BillingCard`, `DashboardLayout`
+- Match file name exactly
+
+**React Hooks:**
+- Use **camelCase** with `use` prefix: `useUser()`, `useBilling()`, `useMobile()`
+
+**Zustand Stores:**
+- Use **camelCase** for store names: `useUserStore`, `useBillingStore`
+- Store files: `user.store.ts`, `billing.store.ts`
+
+## Examples
+
+### Good Examples
+
+```
+✅ features/billing-management/
+   ✅ components/BillingCard.tsx
+   ✅ components/BillingSummary.tsx
+   ✅ data/mock-billing.ts
+   ✅ schemas/billing.schema.ts
+   ✅ utils/billing.utils.ts
+
+✅ types/billing.types.ts
+   export type TBillingPlan = { ... }
+   export type TBillingHistory = { ... }
+
+✅ stores/billing.store.ts
+   export const useBillingStore = create<...>(...)
+
+✅ hooks/use-billing.ts
+   export const useBilling = () => { ... }
+```
+
+### Bad Examples
+
+```
+❌ features/billing/              # Too generic
+❌ features/BillingManagement/    # PascalCase (use kebab-case)
+❌ billingCard.tsx                # Missing PascalCase
+❌ billing-types.ts               # Should be in types/ folder
+❌ BillingStore.ts                # Should be billing.store.ts
+❌ useBilling.ts                  # Should be use-billing.ts (kebab-case)
+```
+
+## Special Cases
+
+### Route Files
+- Next.js route files: `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`
+- Use exact Next.js naming (lowercase)
+
+### Configuration Files
+- Use standard names: `tsconfig.json`, `package.json`, `tailwind.config.ts`
+- Follow framework conventions
+
+### Index Files
+- Use `index.ts` for barrel exports
+- Keep names consistent: `index.ts` not `Index.ts`
+
+## Summary
+
+| Item | Convention | Example |
+|------|-----------|---------|
+| Feature folders | kebab-case | `billing-management/` |
+| Component files | PascalCase | `BillingCard.tsx` |
+| Type files | kebab-case + `.types.ts` | `billing.types.ts` |
+| Utility files | kebab-case + `.utils.ts` | `billing.utils.ts` |
+| Schema files | kebab-case + `.schema.ts` | `billing.schema.ts` |
+| Store files | kebab-case + `.store.ts` | `billing.store.ts` |
+| Hook files | kebab-case + `use-` prefix | `use-billing.ts` |
+| Type names | `T` prefix + PascalCase | `TBillingPlan` |
+| Component names | PascalCase | `BillingCard` |
+| Function names | camelCase | `getBillingPlan()` |
+| Constants | UPPER_SNAKE_CASE | `MAX_RETRY_COUNT` |

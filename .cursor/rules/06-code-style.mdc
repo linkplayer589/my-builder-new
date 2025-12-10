@@ -1,0 +1,433 @@
+---
+description: Code style, TypeScript, and commenting conventions
+alwaysApply: true
+---
+
+# Code Style Rules
+
+## TypeScript Rules
+
+### NEVER Use `any` Type
+
+```typescript
+// ❌ WRONG
+function processData(data: any) {
+  return data.something
+}
+
+// ✅ CORRECT
+type TProcessData = {
+  something: string
+}
+
+function processData(data: TProcessData) {
+  return data.something
+}
+```
+
+**Rule**: Always define proper types. Never use `any`.
+
+### Type vs Interface
+
+Use **Types** (with `T` prefix) for data structures:
+
+```typescript
+/**
+ * User table data structure
+ */
+export type TUserTable = {
+  id: string
+  name: string
+  email: string
+}
+```
+
+Use **Interfaces** (with `I` prefix) for contracts/APIs:
+
+```typescript
+/**
+ * User table repository interface
+ */
+export interface IUserTableRepository {
+  getAll(): Promise<TUserTable[]>
+  getById(id: string): Promise<TUserTable | null>
+}
+```
+
+---
+
+## Commenting Rules
+
+### JSDoc Style Comments
+
+**Always use JSDoc3 style comments** for:
+- Functions
+- Components
+- Types
+- Interfaces
+- Complex logic
+
+### Function Comments
+
+```typescript
+/**
+ * Fetches all users from the database
+ * 
+ * @returns Promise resolving to array of users
+ * @throws {Error} When database connection fails
+ */
+export async function getUsersQuery(): Promise<TUserTable[]> {
+  return await db.query.users.findMany()
+}
+```
+
+### Component Comments
+
+```typescript
+/**
+ * Header component for the user table feature
+ * Displays table title, search, and action buttons
+ * 
+ * @param props - Component props
+ * @returns JSX Element
+ */
+export function UserTableHeader({ onSearch, onAdd }: TUserTableHeaderProps) {
+  return (
+    <div>
+      {/* Table header content */}
+    </div>
+  )
+}
+```
+
+### Type Comments
+
+```typescript
+/**
+ * Props for UserTableHeader component
+ */
+export type TUserTableHeaderProps = {
+  /** Callback fired when search input changes */
+  onSearch?: (query: string) => void
+  /** Callback fired when add button is clicked */
+  onAdd?: () => void
+}
+```
+
+### Complex Logic Comments
+
+```typescript
+/**
+ * Filter users by multiple criteria
+ * Combines search, status, and date filters
+ */
+export function filterUserTableData(
+  data: TUserTable[],
+  filters: TUserTableFilter
+): TUserTable[] {
+  // Filter by search query across name and email
+  let filtered = data
+  if (filters.search) {
+    const query = filters.search.toLowerCase()
+    filtered = filtered.filter(user => 
+      user.name.toLowerCase().includes(query) ||
+      user.email.toLowerCase().includes(query)
+    )
+  }
+  
+  // Filter by status if provided
+  if (filters.status) {
+    filtered = filtered.filter(user => user.status === filters.status)
+  }
+  
+  return filtered
+}
+```
+
+### What NOT to Comment
+
+```typescript
+// ❌ DON'T state the obvious
+let count = 0 // Initialize count to 0
+
+// ❌ DON'T restate the code
+function addNumbers(a, b) {
+  return a + b // Returns a + b
+}
+
+// ✅ DO explain WHY, not WHAT
+// Using exponential backoff to prevent API rate limiting
+await retry(apiCall, { maxRetries: 3, backoff: 'exponential' })
+```
+
+### Comment Guidelines
+
+1. **Focus on WHY and HOW**, not WHAT
+2. **Use clear and concise language**
+3. **Avoid stating the obvious**
+4. **Keep comments up to date**
+5. **Use JSDoc3 format for public APIs**
+6. **Explain complex algorithms**
+7. **Document edge cases and gotchas**
+
+---
+
+## Component Structure
+
+### Functional Components
+
+```typescript
+/**
+ * User table component
+ * Displays paginated list of users with search and filters
+ */
+export function UserTable({ initialData }: TUserTableProps) {
+  // Hooks at the top
+  const { data, isLoading } = useUserTable(initialData)
+  const [filters, setFilters] = useState<TUserTableFilter>({})
+  
+  // Event handlers
+  const handleSearch = useCallback((query: string) => {
+    setFilters(prev => ({ ...prev, search: query }))
+  }, [])
+  
+  // Early returns for loading/error states
+  if (isLoading) return <UserTableSkeleton />
+  if (!data) return <UserTableEmpty />
+  
+  // Main render
+  return (
+    <div>
+      <UserTableHeader onSearch={handleSearch} />
+      <UserTableBody data={data} filters={filters} />
+      <UserTableFooter />
+    </div>
+  )
+}
+```
+
+### Component Principles
+
+1. **Single Responsibility** - One component, one job
+2. **Extract Complex Logic** - Use custom hooks
+3. **Keep Components Small** - Max 150 lines
+4. **Use Composition** - Break into smaller components
+5. **Default Export** - Use default exports for components
+
+---
+
+## Date Formatting
+
+**NEVER use American date format (MM/DD/YYYY)**
+
+### Allowed Formats
+
+```typescript
+// ✅ CORRECT: ISO format
+const date = '2025-10-02' // yyyy-mm-dd
+
+// ✅ CORRECT: European format
+const date = '02/10/2025' // dd/mm/yyyy
+
+// ❌ WRONG: American format
+const date = '10/02/2025' // mm/dd/yyyy - NEVER USE THIS
+```
+
+### Date Utilities
+
+```typescript
+/**
+ * Format date to dd/mm/yyyy
+ */
+export function formatDate(date: Date): string {
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  return `${day}/${month}/${year}`
+}
+
+/**
+ * Format date to yyyy-mm-dd (ISO)
+ */
+export function formatDateISO(date: Date): string {
+  return date.toISOString().split('T')[0]
+}
+```
+
+---
+
+## File Organization
+
+### Import Order
+
+```typescript
+// 1. External libraries
+import { useState, useCallback } from 'react'
+import { z } from 'zod'
+
+// 2. Internal components (generic)
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+
+// 3. Internal utilities
+import { formatDate } from '@/lib/utils'
+import { cn } from '@/lib/utils'
+
+// 4. Database layer
+import { getUsersQuery } from '@/db/queries/user-table-queries'
+
+// 5. Feature-specific (same feature only)
+import { useUserTable } from '../hooks/user-table-hooks'
+import type { TUserTableProps } from '../types/user-table-types'
+
+// 6. Styles (if separate)
+import styles from './user-table-header.module.css'
+```
+
+### File Structure
+
+```typescript
+// 1. Imports
+import { ... }
+
+// 2. Types (if not in separate file)
+type TLocalType = { ... }
+
+// 3. Constants (if not in separate file)
+const LOCAL_CONSTANT = '...'
+
+// 4. Main component/function
+export function UserTableHeader() {
+  // ...
+}
+
+// 5. Helper functions (if local to this file)
+function helperFunction() {
+  // ...
+}
+```
+
+---
+
+## Error Handling
+
+### Custom Error Classes
+
+```typescript
+/**
+ * Error thrown when user table operation fails
+ */
+export class UserTableError extends Error {
+  constructor(
+    message: string,
+    public code: string,
+    public details?: unknown
+  ) {
+    super(message)
+    this.name = 'UserTableError'
+  }
+}
+```
+
+### Error Messages
+
+```typescript
+// ✅ User-friendly error messages
+throw new UserTableError(
+  'Unable to load users. Please try again.',
+  'FETCH_FAILED'
+)
+
+// ❌ Technical error messages for users
+throw new Error('Database connection timeout on query users.findMany()')
+```
+
+### Try-Catch Blocks
+
+```typescript
+/**
+ * Fetch users with error handling
+ */
+export async function getUsersQuery(): Promise<TUserTable[]> {
+  try {
+    return await db.query.users.findMany()
+  } catch (error) {
+    // Log detailed error for debugging
+    console.error('Failed to fetch users:', error)
+    
+    // Throw user-friendly error
+    throw new UserTableError(
+      'Unable to load users. Please try again.',
+      'FETCH_FAILED',
+      error
+    )
+  }
+}
+```
+
+---
+
+## Logging with PostHog
+
+### Log Levels
+
+```typescript
+import { posthog } from '@/lib/posthog'
+
+// Info: General workflow events
+posthog.capture('user_table_loaded', {
+  userCount: data.length,
+  filters: activeFilters
+})
+
+// Warning: Potential issues
+posthog.capture('user_table_slow_load', {
+  duration: loadTime,
+  userCount: data.length
+})
+
+// Error: Actual errors
+posthog.capture('user_table_load_error', {
+  error: error.message,
+  code: error.code
+})
+```
+
+### When to Log
+
+1. **Feature Entry Points** - User navigates to feature
+2. **User Actions** - Clicks, form submissions, searches
+3. **Data Fetches** - API calls, database queries
+4. **Errors** - All caught errors
+5. **Performance** - Slow operations (>1s)
+6. **State Changes** - Important state transitions
+
+### What to Log
+
+```typescript
+// ✅ GOOD: Contextual information
+posthog.capture('user_created', {
+  userId: user.id,
+  source: 'admin_panel',
+  timestamp: new Date().toISOString()
+})
+
+// ❌ BAD: Sensitive information
+posthog.capture('user_created', {
+  password: user.password, // NEVER log passwords
+  email: user.email        // Be careful with PII
+})
+```
+
+---
+
+## Principles Summary
+
+1. **TypeScript Safety** - Never use `any`
+2. **JSDoc Comments** - Document all public APIs
+3. **Focus on WHY** - Comments explain reasoning
+4. **Date Formats** - Never American format
+5. **Single Responsibility** - Components do one thing
+6. **Error Handling** - User-friendly messages
+7. **Comprehensive Logging** - Track all workflows
+8. **Clean Code** - Self-documenting with helpful comments

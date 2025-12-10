@@ -1,0 +1,229 @@
+---
+title: Folder Structure Rules
+description: Detailed rules for organizing files and folders in swift17-ui
+tags: [folder-structure, organization, rules]
+---
+
+# Folder Structure Rules
+
+## 1. Features Folder (`features/[feature-name]/`)
+
+**When to create a new feature folder:**
+
+- New major functionality area (e.g., billing, reports, analytics)
+- Self-contained module with multiple components
+- Has its own data model and business logic
+
+**What goes inside:**
+
+```
+features/[feature-name]/
+├── components/        # REQUIRED: All UI components
+├── data/             # COMMON: Mock data, constants
+├── schemas/          # IF USING FORMS: Zod schemas
+├── utils/            # COMMON: Helper functions
+├── constants/        # RARE: Only if needed (e.g., chart configs)
+├── hooks/            # RARE: Only if needed (feature-specific hooks)
+└── contexts/         # RARE: Only if needed (feature-specific contexts)
+```
+
+**Rules:**
+
+- Feature components should NOT import from other features
+- Feature components CAN import from `components/`, `lib/`, `types/`, `stores/`
+- Keep features self-contained and portable
+
+## 2. App Folder (`app/`)
+
+**Route Structure:**
+
+```
+app/
+├── layout.tsx                 # Root layout
+├── page.tsx                   # Root page
+├── (auth)/                    # Auth routes (no dashboard layout)
+│   └── login/
+│       └── page.tsx
+└── (dashboard)/               # Protected routes (with layout)
+    ├── layout.tsx             # Dashboard layout wrapper
+    ├── page.tsx               # Dashboard home
+    └── [feature]/             # Feature routes
+        ├── page.tsx
+        └── [sub-route]/
+            └── page.tsx
+```
+
+**File Requirements:**
+
+- `page.tsx` - Route component (REQUIRED)
+- `layout.tsx` - Shared layout (OPTIONAL)
+- `loading.tsx` - Loading state (OPTIONAL)
+- `error.tsx` - Error boundary (OPTIONAL)
+- `not-found.tsx` - 404 page (OPTIONAL)
+
+**Rules:**
+
+- Routes should import from `features/`, not directly from feature subfolders
+- Keep route files thin - delegate to feature components
+
+## 3. Components Folder (`components/`)
+
+**For shared components only:**
+
+```
+components/
+├── ui/                    # shadcn/ui components (DON'T MODIFY STRUCTURE)
+│   ├── button.tsx
+│   ├── card.tsx
+│   └── ...
+└── layout/                # Layout components (header, sidebar, footer)
+    ├── app-sidebar.tsx
+    ├── site-header.tsx
+    └── dashboard-footer.tsx
+```
+
+**Rules:**
+
+- Only add components used across 3+ features
+- Feature-specific components go in `features/[feature]/components/`
+- UI primitives from shadcn/ui stay in `components/ui/`
+- Don't modify shadcn/ui component structure
+
+## 4. Types Folder (`types/`)
+
+**PRIMARY LOCATION FOR ALL TYPES:**
+
+```
+types/
+├── auth.types.ts              # Authentication & user types
+├── api.types.ts               # API response types
+├── billing.types.ts           # Billing feature types
+├── toast.types.ts             # Toast notification types
+└── index.ts                   # Type exports
+```
+
+**IMPORTANT RULES:**
+
+- **ALL types go in `types/[feature].types.ts`** (centralized)
+- Use `shared.types.ts` for types used across multiple features
+- Never define types in component files
+- Never define types in feature folders
+- Export all types for reuse
+
+## 5. Convex Folder (`convex/`)
+
+**For Convex backend operations:**
+
+```
+convex/
+├── _serverActions/        # Server-side actions
+├── _schemas/              # Database schemas
+├── _utilities/            # Convex utilities
+├── [entity].ts            # Entity definitions (queries, mutations)
+└── http.ts                # HTTP endpoints
+```
+
+**What goes here:**
+
+- Database queries and mutations
+- Server-side actions
+- Database schemas
+- HTTP endpoints
+
+**Rules:**
+
+- Keep entity files focused on one entity
+- Use `_serverActions/` for complex server-side logic
+- Update schemas in `_schemas/` when database structure changes
+
+## 6. Utils Folder (`lib/`)
+
+**For global utilities:**
+
+```
+lib/
+├── utils.ts               # General utilities (cn helper, etc.)
+├── date-utils.ts          # Date utilities
+├── api-client.ts          # API client (if needed)
+└── ...
+```
+
+**Feature-specific utilities go in:**
+
+`features/[feature]/utils/[feature].utils.ts`
+
+**Rules:**
+
+- Only add utilities used across multiple features
+- Feature-specific utilities stay in feature folders
+- Keep functions pure and testable
+
+## 7. Store Folder (`stores/`)
+
+**For Zustand stores:**
+
+```
+stores/
+├── navigation.store.ts    # UI state for navigation
+├── app.store.ts          # Global app store
+└── [feature].store.ts     # Feature-specific store
+```
+
+**Naming Convention:**
+
+- `[feature-name].store.ts`
+- Example: `user.store.ts`, `cart.store.ts`
+
+**Important Guidelines:**
+
+- Use a Zustand store when a feature requires shared state and actions that multiple components depend on
+- Use `useState` when the state is local to a single component and does not need to be accessed or managed outside that component
+
+## 8. Hooks Folder (`hooks/`)
+
+**For global custom hooks:**
+
+```
+hooks/
+├── use-convex-user.ts     # Convex user hook
+├── use-mobile.tsx         # Mobile detection
+└── use-toast.ts           # Toast notifications
+```
+
+**Rules:**
+
+- Only add hooks used across multiple features
+- Feature-specific hooks go in `features/[feature]/hooks/`
+
+## 9. Styles Folder (`styles/`)
+
+**For global styles:**
+
+```
+styles/
+├── globals.css            # Global CSS
+└── fonts.css              # Font definitions
+```
+
+**Rules:**
+
+- Keep global styles minimal
+- Use Tailwind CSS for most styling
+- Feature-specific styles should use Tailwind classes
+
+## 10. Public Folder (`public/`)
+
+**For static assets:**
+
+```
+public/
+├── images/                # Images
+├── icons/                 # Icons
+└── avatars/               # Avatar images
+```
+
+**Rules:**
+
+- Organize assets by type
+- Use descriptive folder names
+- Keep file sizes optimized

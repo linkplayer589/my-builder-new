@@ -1,0 +1,34 @@
+---
+description: Project architecture philosophy and core principles
+alwaysApply: true
+---
+
+# Project Architecture Philosophy
+
+## Core Principles
+
+1. **FEATURE PORTABILITY**: Features must be self-contained and copyable between projects
+2. **CONTEXT SEARCH OPTIMIZATION**: File naming enables finding all related files easily
+3. **STRICT BOUNDARIES**: Clear import rules prevent tight coupling
+4. **CONVEX PATTERNS**: Database organization follows Convex best practices (queries/mutations)
+5. **CLEAN ARCHITECTURE**: Layered structure with dependency rules
+
+## Key Rules
+
+- `/app` routes ONLY import from `/features`
+- Features are independent (no cross-feature imports)
+- All files prefixed with feature/table name for context searching
+- Nested features indicate parent-only usage
+- Database in `/db` (general) or `/convex` (Convex-specific)
+- Generic components in `/components` (no feature dependencies)
+
+## File Naming Convention
+
+**Format**: `[feature-name]-[descriptor].[ext]`
+
+**Examples**:
+- `user-table-header.tsx`
+- `user-table-hooks.ts`
+- `product-catalog-schema.ts`
+
+**Benefit**: Type "user-table" to find ALL related files instantly! 🎯

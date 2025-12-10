@@ -1,0 +1,140 @@
+---
+title: Feature Development Workflow
+description: Step-by-step guide for developing new features in swift17-ui
+tags: [workflow, feature-development, guide]
+---
+
+# Feature Development Workflow
+
+## Step-by-Step Guide for New Features
+
+### Step 1: Analyze Feature Requirements
+
+- Identify feature scope and boundaries
+- Determine if it's a new feature or enhancement to existing
+- List required components, types, and data
+- Identify if Convex backend operations are needed
+
+### Step 2: Create Feature Folder Structure
+
+Create the feature folder with required subdirectories:
+
+```bash
+features/[feature-name]/
+├── components/              # UI components (REQUIRED)
+│   ├── [main-component].tsx
+│   ├── [sub-component].tsx
+│   └── [nested-folder]/     # Optional: for complex component groups
+│
+├── data/                    # Mock data and constants (COMMON)
+│   ├── mock-[feature].ts
+│   └── [feature].mock.json  # Optional: JSON mock files
+│
+├── schemas/                 # Zod validation schemas (IF USING FORMS)
+│   └── [entity].schema.ts
+│
+├── utils/                   # Feature-specific utilities (COMMON)
+│   └── [feature].utils.ts
+│
+├── constants/               # Feature constants (RARE - only if needed)
+│   └── [feature]-config.ts
+│
+├── hooks/                   # Custom hooks (RARE - only if needed)
+│   └── use-[feature].ts
+│
+└── contexts/                # React contexts (RARE - only if needed)
+    └── [context]-context.tsx
+```
+
+### Step 3: Create Route Structure
+
+Create the route in the app directory:
+
+```bash
+app/(dashboard)/[feature-name]/
+├── layout.tsx              # Optional: feature-specific layout
+├── page.tsx                # Main feature page
+├── loading.tsx             # Optional: loading state
+├── error.tsx               # Optional: error boundary
+└── [sub-route]/            # Sub-routes
+    └── page.tsx
+```
+
+### Step 4: Define Types First
+
+**CRITICAL**: Create types in `types/[feature].types.ts` (e.g., `billing.types.ts`)
+
+- Export all types for reuse
+- Use `types/shared.types.ts` for cross-feature types
+- Never define types in component files or feature folders
+
+Example:
+```typescript
+// types/billing.types.ts
+export type TBillingPlan = {
+  id: string;
+  name: string;
+  price: number;
+  // ...
+};
+```
+
+### Step 5: Create Mock Data
+
+- Add mock data in `features/[feature-name]/data/`
+- Use TypeScript or JSON files
+- Ensure mock data matches type definitions from `types/`
+
+### Step 6: Build Components
+
+- Start with main container component
+- Break down into smaller sub-components
+- Follow component composition patterns
+- Use shadcn/ui components from `components/ui/`
+
+### Step 7: Add Validation Schemas
+
+- Create Zod schemas in `features/[feature-name]/schemas/`
+- Use schemas with React Hook Form
+- Ensure schemas match types in `types/[feature].types.ts`
+
+### Step 8: Implement Convex Backend (if needed)
+
+- Add queries/mutations in `convex/[entity].ts`
+- Add server actions in `convex/_serverActions/`
+- Update schemas in `convex/_schemas/` if needed
+
+### Step 9: Add Utilities
+
+- Create utilities in `features/[feature-name]/utils/`
+- Keep functions pure and testable
+- Only add to feature utils if feature-specific
+- Use `lib/` for cross-feature utilities
+
+### Step 10: Add Zustand Store (if needed)
+
+- Create store in `stores/[feature].store.ts` if shared state is needed
+- Use for state that multiple components need to access
+- Prefer local state (`useState`) when state is component-specific
+
+### Step 11: Integrate with Routes
+
+- Import feature components in appropriate pages
+- Ensure proper error boundaries
+- Add loading states where needed
+
+## Checklist
+
+Before completing a feature:
+
+- [ ] Feature folder structure created
+- [ ] Types defined in `types/[feature].types.ts`
+- [ ] Mock data created (if needed)
+- [ ] Components built and composed
+- [ ] Zod schemas created (if using forms)
+- [ ] Convex backend implemented (if needed)
+- [ ] Utilities added to feature folder
+- [ ] Route structure created in `app/`
+- [ ] Components integrated into routes
+- [ ] No cross-feature imports
+- [ ] All imports follow architecture rules

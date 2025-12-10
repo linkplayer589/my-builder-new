@@ -1,0 +1,254 @@
+---
+description: Feature architecture rules for self-contained, portable feature modules
+globs:
+  - "src/features/**"
+alwaysApply: true
+---
+
+# Feature Architecture Rules
+
+## Core Principle
+
+Features MUST be **self-contained and portable** - copy to another project and it works after `pnpm install`.
+
+## Feature Structure
+
+```
+features/[feature-name]/
+├── [feature-name]-components/   # Feature UI components
+│   ├── [feature-name]-header.tsx
+│   ├── [feature-name]-header-utils.ts       # Component-specific utils
+│   ├── [feature-name]-header-types.ts       # Component-specific types
+│   ├── [feature-name]-row.tsx
+│   └── [feature-name]-footer.tsx
+├── [feature-name]-hooks/        # Shared feature hooks
+│   └── [feature-name]-hooks.ts
+├── [feature-name]-utils/        # Shared feature utilities
+│   └── [feature-name]-utils.ts
+├── [feature-name]-types/        # Shared feature type definitions
+│   └── [feature-name]-types.ts
+├── [feature-name]-constants/    # Feature constants
+│   └── [feature-name]-constants.ts
+├── [feature-name]-features/     # Nested features (parent-only usage)
+│   └── [nested-feature]/
+└── index.ts                     # Public API export
+```
+
+## Component-Specific Files
+
+**CRITICAL**: If a file (hook, util, type, etc.) is used by **only one component**, keep it with that component.
+
+### ✅ CORRECT: Component-Specific Files
+
+```
+[feature-name]-components/
+├── [feature-name]-header.tsx                 # Main component
+├── [feature-name]-header-utils.ts            # ONLY used by header
+├── [feature-name]-header-types.ts            # ONLY used by header
+├── [feature-name]-header-hooks.ts            # ONLY used by header
+└── [feature-name]-row.tsx
+```
+
+### ❌ WRONG: Shared Folder for Single-Component Files
+
+```
+[feature-name]-utils/
+└── [feature-name]-header-utils.ts            # ❌ Only used by header, should be with component
+
+[feature-name]-components/
+└── [feature-name]-header.tsx
+```
+
+### When to Use Shared vs Component-Specific
+
+**Use component-specific files** (`[component-name]-utils.ts`) when:
+- ✅ File is ONLY used by that one component
+- ✅ Logic is tightly coupled to component behavior
+- ✅ Types are specific to component props/state
+
+**Use shared feature files** (`[feature-name]-utils/`) when:
+- ✅ File is used by multiple components in the feature
+- ✅ Logic is reusable across the feature
+- ✅ Types are shared between components
+
+## Naming Convention
+
+**CRITICAL**: ALL files within a feature MUST be prefixed with the feature name.
+
+**Format**: `[feature-name]-[descriptor].[ext]`
+
+**Examples**:
+```
+✅ CORRECT:
+features/user-table/user-table-components/user-table-header.tsx
+features/user-table/user-table-hooks/user-table-hooks.ts
+features/user-table/user-table-utils/user-table-utils.ts
+features/user-table/user-table-types/user-table-types.ts
+
+❌ INCORRECT:
+features/user-table/components/header.tsx
+features/user-table/hooks/hooks.ts
+features/user-table/utils/utils.ts
+```
+
+**Benefit**: Search "user-table" to find ALL related files instantly!
+
+## Nested Features
+
+Nested features indicate **parent-only usage**:
+
+```
+features/
+└── user-table/                      # Parent feature
+    └── user-table-features/         # Nested features
+        └── user-details/            # ONLY used by user-table
+            ├── user-details-components/
+            │   └── user-details-form.tsx
+            └── index.ts
+```
+
+**Rule**: If nested, it's only used by parent. If used elsewhere, promote to top-level feature.
+
+## Public API Export
+
+Each feature MUST export its public API through `index.ts`:
+
+```typescript
+// features/user-table/index.ts
+export { UserTableHeader } from './components/user-table-header'
+export { UserTableRow } from './components/user-table-row'
+export { useUserTable } from './hooks/user-table-hooks'
+export type { TUserTableProps } from './types/user-table-types'
+```
+
+## Import Rules
+
+**Features CAN import**:
+```typescript
+import { Button } from '@/components/ui/button'           // ✅ Generic components
+import { formatDate } from '@/lib/utils'                  // ✅ Shared utilities
+import { getUserQuery } from '@/db/queries'               // ✅ Database layer
+import { useUserTable } from '../hooks/user-table-hooks' // ✅ Same feature
+import { UserDetails } from './features/user-details'    // ✅ Nested features
+```
+
+**Features CANNOT import**:
+```typescript
+import { ProductCard } from '@/features/product-catalog'  // ❌ Other features
+import { AdminLayout } from '@/app/admin/layout'          // ❌ App routes
+```
+
+**Why?** Cross-feature imports break portability!
+
+## Good Feature Example
+
+### Component with Shared Dependencies
+
+```typescript
+// features/user-table/user-table-components/user-table-header.tsx
+import { Button } from '@/components/ui/button'           // ✅ Generic component
+import { useUserTable } from '../user-table-hooks/user-table-hooks' // ✅ Shared feature hook
+import { formatDate } from '@/lib/utils'                  // ✅ Shared utility
+
+/**
+ * Header component for the user table feature
+ * Displays table title and action buttons
+ */
+export function UserTableHeader() {
+  const { data } = useUserTable()
+  return (
+    <div>
+      <h2>User Table</h2>
+      <Button>Add User</Button>
+    </div>
+  )
+}
+```
+
+### Component with Component-Specific Dependencies
+
+```typescript
+// features/user-table/user-table-components/user-table-header.tsx
+import { Button } from '@/components/ui/button'           // ✅ Generic component
+import { useUserTable } from '../user-table-hooks/user-table-hooks' // ✅ Shared feature hook
+import { formatHeaderDate } from './user-table-header-utils' // ✅ Component-specific util
+import type { TUserTableHeaderProps } from './user-table-header-types' // ✅ Component-specific types
+
+/**
+ * Header component for the user table feature
+ * Displays table title and action buttons
+ */
+export function UserTableHeader({ title, onSearch }: TUserTableHeaderProps) {
+  const { data } = useUserTable()
+  const formattedDate = formatHeaderDate(data.lastUpdated) // Using component-specific util
+  
+  return (
+    <div>
+      <h2>{title}</h2>
+      <span>{formattedDate}</span>
+      <Button>Add User</Button>
+    </div>
+  )
+}
+```
+
+```typescript
+// features/user-table/user-table-components/user-table-header-utils.ts
+/**
+ * Format date specifically for header display
+ * ONLY used by UserTableHeader component
+ */
+export function formatHeaderDate(date: Date): string {
+  return date.toLocaleDateString('en-GB', { 
+    day: '2-digit', 
+    month: 'short', 
+    year: 'numeric' 
+  })
+}
+```
+
+```typescript
+// features/user-table/user-table-components/user-table-header-types.ts
+/**
+ * Props for UserTableHeader component
+ * ONLY used by UserTableHeader
+ */
+export type TUserTableHeaderProps = {
+  title: string
+  onSearch?: (query: string) => void
+  onAdd?: () => void
+}
+```
+
+## Bad Feature Example
+
+```typescript
+// ❌ WRONG: Importing from other features breaks portability
+import { ProductCard } from '@/features/product-catalog/components/product-card'
+
+// ❌ WRONG: Importing from /app breaks feature independence
+import { AdminLayout } from '@/app/admin/layout'
+
+// ❌ WRONG: File not prefixed with feature name
+// File: features/user-table/components/header.tsx (should be user-table-header.tsx)
+```
+
+## Feature Portability Checklist
+
+Before considering a feature "complete," verify:
+
+- [ ] All files prefixed with feature name
+- [ ] No cross-feature imports (only same feature or shared resources)
+- [ ] Public API exported through `index.ts`
+- [ ] External dependencies clearly documented
+- [ ] Nested features only used by parent
+- [ ] Self-contained with own components, hooks, utils, types
+- [ ] Can be copied to another project and work after `pnpm install`
+
+## Feature Independence Requirements
+
+1. **No cross-feature imports** - Each feature is independent
+2. **Clear boundaries** - Nested features show parent-only usage
+3. **Naming consistency** - All files prefixed for easy searching
+4. **Public API** - Only expose what's needed through index.ts
+5. **Portability** - Can copy to another project and it works

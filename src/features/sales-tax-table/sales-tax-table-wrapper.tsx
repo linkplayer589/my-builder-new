@@ -1,0 +1,133 @@
+import * as React from 'react'
+import { redirect } from 'next/navigation'
+
+import { dbGetAllResorts } from '@/features/resorts/resort-actions/db-get-all-resorts'
+import { type SearchParams } from '@/types/index'
+
+import { dbGetSalesTaxData } from './_actions/db-get-sales-tax-data'
+import { SalesTaxTableContent } from './sales-tax-table-components/sales-tax-table-content'
+
+/**
+ * Server component wrapper for the sales tax table
+ *
+ * @description
+ * This is a server component that handles data fetching from both internal orders
+ * AND Skidata export, then cross-references them for reconciliation.
+ *
+ * The component:
+ * - Resolves resort from resort name
+ * - Handles date range parsing (defaults to last 7 days)
+ * - Fetches data from both internal orders and Skidata
+ * - Cross-references to identify discrepancies
+ * - Calculates revenue totals with tax amounts
+ * - Passes data to the client table component
+ *
+ * @param props - Component props
+ * @param props.resortName - Name of the resort (can be string or Promise)
+ * @param props.searchParams - URL search parameters including dates and sorting
+ *
+ * @returns Promise resolving to the sales tax table component with data
+ */
+export async function SalesTaxTableWrapper({
+  resortName,
+  searchParams,
+}: {
+  /** Name of the resort to fetch data for */
+  resortName: string | Promise<string>
+  /** URL search parameters for date range and sorting */
+  searchParams: Promise<SearchParams>
+}) {
+  // Await resortName if it's a Promise (Next.js 15+ compatibility)
+  const resolvedResortName = typeof resortName === 'string' ? resortName : await resortName
+
+  // Get all resorts and find the matching one
+  const resorts = await dbGetAllResorts()
+  const selectedResort = decodeURIComponent(resolvedResortName).toLowerCase()
+  const resort = resorts.find((r) => {
+    const normalizedResortName = r.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+    return normalizedResortName === selectedResort
+  })
+
+  if (!resort) {
+    return redirect('/admin')
+  }
+
+  const rawSearchParams = await searchParams
+
+  // Parse date range from search params (defaults to last 7 days)
+  const defaultEndDate = new Date()
+  const defaultStartDate = new Date(defaultEndDate)
+  defaultStartDate.setDate(defaultStartDate.getDate() - 7)
+
+  const fromDate = deriveDate(rawSearchParams.from, defaultStartDate)
+  const toDate = deriveDate(rawSearchParams.to, defaultEndDate)
+
+  // Preserve times from URL params, only set defaults if no time was specified
+  const startDate = new Date(fromDate)
+  // Only reset to midnight if this is a default date (no URL param provided)
+  if (!rawSearchParams.from) {
+    startDate.setHours(0, 0, 0, 0)
+  }
+
+  const endDate = new Date(toDate)
+  // Only reset to end of day if this is a default date (no URL param provided)
+  if (!rawSearchParams.to) {
+    endDate.setHours(23, 59, 59, 999)
+  }
+
+  // Fetch sales tax data with cross-reference
+  const { data, error } = await dbGetSalesTaxData({
+    resortId: resort.id,
+    startDate,
+    endDate,
+  })
+
+  // If error occurred, return error message
+  if (error) {
+    return (
+      <div className="mb-4 text-red-500">
+        Error fetching sales tax data: {error}
+      </div>
+    )
+  }
+
+  // If no data, return empty message
+  if (!data) {
+    return (
+      <div className="mb-4 text-muted-foreground">
+        No sales tax data available.
+      </div>
+    )
+  }
+
+  // Pass all data to content component - it will handle the toggle and filtering
+  return (
+    <SalesTaxTableContent
+      items={data.items}
+      resortId={resort.id}
+      liveStats={data.liveStats}
+      testStats={data.testStats}
+      liveReconciliation={data.liveReconciliation}
+      testReconciliation={data.testReconciliation}
+    />
+  )
+}
+
+/**
+ * Derive date from search param value or default
+ */
+function deriveDate(
+  paramValue: string | string[] | undefined,
+  defaultDate: Date
+): Date {
+  if (typeof paramValue === 'string') {
+    const parsed = new Date(paramValue)
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed
+    }
+  }
+
+  return defaultDate
+}
