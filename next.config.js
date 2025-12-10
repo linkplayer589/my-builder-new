@@ -53,76 +53,76 @@ const nextConfig = {
   ],
 
   // Turbopack configuration
-  turbopack: {
-    rules: {
-      // Handle markdown files in node_modules (like README.md files)
-      // This prevents "Unknown module type" errors when Turbopack encounters .md files
-      "*.md": {
-        condition: {
-          // Match files in node_modules directory
-          path: /node_modules/,
-        },
-        loaders: ["raw-loader"],
-        as: "*.js",
-      },
-      // Comprehensive rule to exclude test files, binaries, and other non-production files
-      // This prevents Turbopack from trying to parse these files as production code
-      "*": {
-        condition: {
-          all: [
-            {
-              any: [
-                { path: /node_modules/ },
-                { path: /\/ROOT\/.*node_modules/ },
-              ],
-            },
-            {
-              any: [
-                // Match test files
-                { path: /\.test\.(js|ts|mjs|cjs)$/ },
-                { path: /\.spec\.(js|ts|mjs|cjs)$/ },
-                // Match test directories (including absolute paths)
-                { path: /\/test\// },
-                { path: /\/tests\// },
-                { path: /\/__tests__\// },
-                // Match LICENSE files
-                { path: /\/LICENSE$/ },
-                { path: /\/LICENSE\.(md|txt)$/ },
-                // Match benchmark files
-                { path: /\/bench\.(js|ts|mjs)$/ },
-                { path: /\/benchmark\.(js|ts|mjs)$/ },
-                // Match files with unknown extensions in test directories
-                { path: /\/test\/.*\.(zip|sh|yml|yaml)$/ },
-                // Match syntax error test files
-                { path: /syntax-error\.(js|mjs)$/ },
-                // Match esbuild binary specifically
-                { path: /@esbuild\/.*\/bin\/esbuild$/ },
-                // Match any file in bin directories without extension
-                { path: /\/bin\/[^/]+$/ },
-                // Match common executable extensions
-                { path: /\.(exe|bin|so|dylib|dll)$/ },
-              ],
-            },
-          ],
-        },
-        loaders: [
-          {
-            loader: resolve(__dirname, "./src/lib/empty-loader.cjs"),
-          },
-        ],
-        as: "*.js",
-      },
-    },
-    // Resolve aliases to redirect problematic imports to empty module
-    resolveAlias: {
-      // Redirect esbuild binary imports to empty module
-      // This prevents Turbopack from trying to parse binary executables
-      "@esbuild/linux-x64/bin/esbuild": "./src/lib/empty-module.js",
-      // Redirect thread-stream test files to empty module
-      "thread-stream/test": "./src/lib/empty-module.js",
-      "thread-stream/bench": "./src/lib/empty-module.js",
-    },
-  },
+  // turbopack: {
+  //   rules: {
+  //     // Handle markdown files in node_modules (like README.md files)
+  //     // This prevents "Unknown module type" errors when Turbopack encounters .md files
+  //     "*.md": {
+  //       condition: {
+  //         // Match files in node_modules directory
+  //         path: /node_modules/,
+  //       },
+  //       loaders: ["raw-loader"],
+  //       as: "*.js",
+  //     },
+  //     // Comprehensive rule to exclude test files, binaries, and other non-production files
+  //     // This prevents Turbopack from trying to parse these files as production code
+  //     "*": {
+  //       condition: {
+  //         all: [
+  //           {
+  //             any: [
+  //               { path: /node_modules/ },
+  //               { path: /\/ROOT\/.*node_modules/ },
+  //             ],
+  //           },
+  //           {
+  //             any: [
+  //               // Match test files
+  //               { path: /\.test\.(js|ts|mjs|cjs)$/ },
+  //               { path: /\.spec\.(js|ts|mjs|cjs)$/ },
+  //               // Match test directories (including absolute paths)
+  //               { path: /\/test\// },
+  //               { path: /\/tests\// },
+  //               { path: /\/__tests__\// },
+  //               // Match LICENSE files
+  //               { path: /\/LICENSE$/ },
+  //               { path: /\/LICENSE\.(md|txt)$/ },
+  //               // Match benchmark files
+  //               { path: /\/bench\.(js|ts|mjs)$/ },
+  //               { path: /\/benchmark\.(js|ts|mjs)$/ },
+  //               // Match files with unknown extensions in test directories
+  //               { path: /\/test\/.*\.(zip|sh|yml|yaml)$/ },
+  //               // Match syntax error test files
+  //               { path: /syntax-error\.(js|mjs)$/ },
+  //               // Match esbuild binary specifically
+  //               { path: /@esbuild\/.*\/bin\/esbuild$/ },
+  //               // Match any file in bin directories without extension
+  //               { path: /\/bin\/[^/]+$/ },
+  //               // Match common executable extensions
+  //               { path: /\.(exe|bin|so|dylib|dll)$/ },
+  //             ],
+  //           },
+  //         ],
+  //       },
+  //       loaders: [
+  //         {
+  //           loader: resolve(__dirname, "./src/lib/empty-loader.cjs"),
+  //         },
+  //       ],
+  //       as: "*.js",
+  //     },
+  //   },
+  //   // Resolve aliases to redirect problematic imports to empty module
+  //   resolveAlias: {
+  //     // Redirect esbuild binary imports to empty module
+  //     // This prevents Turbopack from trying to parse binary executables
+  //     "@esbuild/linux-x64/bin/esbuild": "./src/lib/empty-module.js",
+  //     // Redirect thread-stream test files to empty module
+  //     "thread-stream/test": "./src/lib/empty-module.js",
+  //     "thread-stream/bench": "./src/lib/empty-module.js",
+  //   },
+  // },
 }
 
 export default nextConfig
