@@ -264,6 +264,9 @@ importers:
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@3.4.18(tsx@4.20.6))
+      terser-webpack-plugin:
+        specifier: ^5.3.15
+        version: 5.3.15(@swc/core@1.15.2)(esbuild@0.25.12)(webpack@5.103.0(@swc/core@1.15.2)(esbuild@0.25.12))
       twilio:
         specifier: ^5.4.3
         version: 5.10.6
