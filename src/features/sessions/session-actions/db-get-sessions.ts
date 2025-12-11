@@ -65,7 +65,7 @@ type SessionFilter = {
  * Note: For very large page sizes (>100), cache may be skipped due to size limits.
  */
 export async function dbGetSessions(input: SearchParamsType) {
-  "use cache"
+  //   "use cache"
   //   console.log("[DB] Getting sessions...", { input })
   try {
     const offset = (input.page - 1) * input.perPage
