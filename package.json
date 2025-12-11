@@ -6,7 +6,7 @@
   "scripts": {
     "clean": "rimraf --glob **/node_modules **/dist **/.next pnpm-lock.yaml **/.tsbuildinfo",
     "build": "NEXT_DISABLE_TURBOPACK=1 next build --webpack",
-    "dev": "next dev",
+    "dev": "NEXT_DISABLE_TURBOPACK=1 next dev --webpack",
     "start": "next start",
     "simulate:vercel": "bash scripts/simulate-vercel.sh",
     "diagnose:production": "bash scripts/diagnose-production-issues.sh",
