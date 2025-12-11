@@ -176,9 +176,9 @@ const nextConfig = {
   typescript: { ignoreBuildErrors: true },
 
   // Force disable Turbopack via environment variable instead
-  // experimental: {
-  //   useCache: true,
-  // },
+  experimental: {
+    useCache: false,
+  },
 
   // Mark pino, thread-stream, and Payload as external packages for server components
   serverExternalPackages: [
